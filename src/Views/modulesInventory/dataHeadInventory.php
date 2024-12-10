@@ -45,14 +45,14 @@
 
                     <div class="tab-pane fade" id="otrosDatos" role="tabpanel" aria-labelledby="otrosDatos">
 
-                        <?= $this->include('julio101290\boilerplateinventory\Views\modulesSells/otrosDatos') ?>
+                        <?= $this->include('julio101290\boilerplateinventory\Views\modulesInventory/otrosDatos') ?>
 
                     </div>
 
 
                     <div class="tab-pane fade" id="facturacionMX" role="tabpanel" aria-labelledby="otrosDatos">
 
-                        <?= $this->include('julio101290\boilerplateinventory\Views\modulesSells/facturacionMX') ?>
+                        <?= $this->include('julio101290\boilerplateinventory\Views\modulesInventory/facturacionMX') ?>
 
                     </div>
 
