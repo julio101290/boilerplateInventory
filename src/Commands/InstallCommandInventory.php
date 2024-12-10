@@ -72,7 +72,7 @@ class InstallCommandInventory extends BaseCommand
             $this->call('migrate');
             // then seed data
             $seeder = Database::seeder();
-            $seeder->call('julio101290\boilerplatesuppliers\Database\Seeds\BoilerplateInventory');
+            $seeder->call('julio101290\boilerplateinventory\Database\Seeds\BoilerplateInventory');
         } catch (\Exception $e) {
             $this->showError($e);
         }
