@@ -15,6 +15,13 @@ $routes->group('admin', function ($routes) {
                 ,['namespace' => 'julio101290\boilerplateinventory\Controllers']
                 );
 
+    $routes->get('newInventory'
+                    , 'InventoryController::newInventory'
+                    ,['namespace' => 'julio101290\boilerplateinventory\Controllers']
+                );
+
+                
+
     $routes->get('editInventory/(:any)'
                 , 'InventoryController::editInventory/$1'
                 ,['namespace' => 'julio101290\boilerplateinventory\Controllers']
