@@ -20,8 +20,6 @@ $routes->group('admin', function ($routes) {
                     ,['namespace' => 'julio101290\boilerplateinventory\Controllers']
                 );
 
-                
-
     $routes->get('editInventory/(:any)'
                 , 'InventoryController::editInventory/$1'
                 ,['namespace' => 'julio101290\boilerplateinventory\Controllers']
@@ -36,10 +34,12 @@ $routes->group('admin', function ($routes) {
                     , 'InventoryController::getLastCode'
                     ,['namespace' => 'julio101290\boilerplateinventory\Controllers']
                     );
+                    
     $routes->get('inventory/report/(:any)'
                 , 'InventoryController::report/$1'
                 ,['namespace' => 'julio101290\boilerplateinventory\Controllers']
                 );
+
     $routes->get('inventory/(:any)/(:any)/(:any)'
                 , 'InventoryController::inventoryFilters/$1/$2/$3'
                 ,['namespace' => 'julio101290\boilerplateinventory\Controllers']
