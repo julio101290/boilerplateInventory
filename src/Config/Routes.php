@@ -3,10 +3,6 @@
 $routes->group('admin', function ($routes) {
 
 
-
-
-
-
     $routes->resource('inventory', [
         'filter' => 'permission:inventory-permission',
         'controller' => 'InventoryController',
