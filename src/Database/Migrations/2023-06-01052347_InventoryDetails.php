@@ -4,7 +4,7 @@ namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
 
-class InventoryDetails extends MigrationCarta {
+class InventoryDetails extends Migration {
 
     public function up() {
         // QuotesDetails
