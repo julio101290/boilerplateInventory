@@ -267,7 +267,7 @@
 
         console.log(uuid);
 
-        tableProducts.ajax.url(`<?= base_url('admin/payments/getPayments') ?>/` + uuid).load();
+       // tableProducts.ajax.url(`<?= base_url('admin/payments/getPayments') ?>/` + uuid).load();
 
     });
 
