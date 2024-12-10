@@ -48,6 +48,8 @@
 <script>
 
 
+/*
+
     var tableProducts = $('#table-payments').DataTable({
         processing: true,
         serverSide: true,
@@ -93,7 +95,7 @@
         ]
     });
 
-
+*/
     /**
      * Evento al hacer click al boton btnAgregarDiagnostico
      */
