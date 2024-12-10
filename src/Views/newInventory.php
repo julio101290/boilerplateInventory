@@ -1,4 +1,4 @@
-<?= $this->include('load/toggle') ?>
+<?= $this->include('julio101290\boilerplate\Views\load/toggle') ?>
 <?= $this->include('julio101290\boilerplate\Views\load\select2') ?>
 <?= $this->include('julio101290\boilerplate\Views\load\datatables') ?>
 <?= $this->include('julio101290\boilerplate\Views\load\nestable') ?>
@@ -8,11 +8,11 @@
 <!-- Section content -->
 <?= $this->section('content') ?>
 
-<?= $this->include('modulesInventory/dataHeadInventory') ?>
-<?= $this->include('modulesInventory/productosModalInventory') ?>
-<?= $this->include('modulesInventory/modalPayment') ?>
-<?= $this->include('modulesInventory/moreInfoRow') ?>
-<?= $this->include('modulesProducts/modalCaptureProducts') ?>
-<?= $this->include('modulesCustumers/modalCaptureCustumers') ?>
+<?= $this->include('julio101290\boilerplateinventory\Views\modulesInventory/dataHeadInventory') ?>
+<?= $this->include('julio101290\boilerplateinventory\Views\modulesInventory/productosModalInventory') ?>
+<?= $this->include('julio101290\boilerplateinventory\Views\modulesInventory/modalPayment') ?>
+<?= $this->include('julio101290\boilerplateinventory\Views\modulesInventory/moreInfoRow') ?>
+<?= $this->include('julio101290\boilerplateinventory\Views\modulesProducts/modalCaptureProducts') ?>
+<?= $this->include('julio101290\boilerplateinventory\Views\modulesCustumers/modalCaptureCustumers') ?>
 
 <?= $this->endSection() ?>
