@@ -12,7 +12,7 @@
 <?= $this->include('julio101290\boilerplateinventory\Views\modulesInventory/productosModalInventory') ?>
 <?= $this->include('julio101290\boilerplateinventory\Views\modulesInventory/modalPayment') ?>
 <?= $this->include('julio101290\boilerplateinventory\Views\modulesInventory/moreInfoRow') ?>
-<?= $this->include('julio101290\boilerplateinventory\Views\modulesProducts/modalCaptureProducts') ?>
+<?= $this->include('julio101290\boilerplateproducts\Views\modulesProducts/modalCaptureProducts') ?>
 <?= $this->include('julio101290\boilerplateinventory\Views\modulesCustumers/modalCaptureCustumers') ?>
 
 <?= $this->endSection() ?>
