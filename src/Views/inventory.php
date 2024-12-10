@@ -1,5 +1,5 @@
 <?= $this->include('julio101290\boilerplate\Views\load/daterangapicker') ?>
-<?= $this->include('load/toggle') ?>
+<?= $this->include('julio101290\boilerplate\Views\load/toggle') ?>
 <?= $this->include('julio101290\boilerplate\Views\load\datatables') ?>
 
 
