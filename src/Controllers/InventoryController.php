@@ -4,7 +4,7 @@ namespace julio101290\boilerplateinventory\Controllers;
 
 use App\Controllers\BaseController;
 use App\Database\Migrations\Storages;
-use App\Models\ProductsModel;
+use julio101290\boilerplateproducts\Models\ProductsModel;
 use \App\Models\UserModel;
 use julio101290\boilerplatelog\Models\LogModel;
 use julio101290\boilerplateinventory\Models\InventoryModel;
