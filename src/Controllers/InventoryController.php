@@ -185,7 +185,7 @@ class InventoryController extends BaseController {
         $titulos["title"] = "Nuevo Inventario"; //lang('registerNew.title');
         $titulos["subtitle"] = "Captura de Inventario"; // lang('registerNew.subtitle');
 
-        return view('newInventory', $titulos);
+        return view('julio101290\boilerplateinventory\Views\newInventory', $titulos);
     }
 
     /**
@@ -333,7 +333,7 @@ class InventoryController extends BaseController {
         $titulos["title"] = "Editar Inventario";
         $titulos["subtitle"] = "Edición de Inventario";
 
-        return view('newInventory', $titulos);
+        return view('julio101290\boilerplateinventory\Views\newInventory', $titulos);
     }
 
     /*
