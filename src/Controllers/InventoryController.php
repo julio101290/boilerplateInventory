@@ -1545,4 +1545,59 @@ class InventoryController extends BaseController {
         //============================================================+
     }
 
+
+    /**
+     * Get Products Inventory
+     */
+
+    public function getAllProductsInventory($empresa, $idStorage, $idTipoMovimiento) {
+
+
+        helper('auth');
+
+        $idUser = user()->id;
+        $titulos["empresas"] = $this->empresa->mdlEmpresasPorUsuario($idUser);
+
+        if (count($titulos["empresas"]) == "0") {
+
+            $empresasID[0] = "0";
+        } else {
+
+            $empresasID = array_column($titulos["empresas"], "id");
+        }
+
+
+        //BUSCAMOS EL TIPO DE MOVIMIENTO SI ES ENTRADA O SALIDA
+        $tiposMovimiento = $this->tiposMovimientoInventario->select("*")
+                        ->wherein("idEmpresa", $empresasID)
+                        ->where("id", $idTipoMovimiento)->first();
+
+        if ($tiposMovimiento == null) {
+
+            $datos = $this->products->mdlProductosEmpresaInventarioEntrada($empresasID, $empresa);
+            return \Hermawan\DataTables\DataTable::of($datos)->toJson(true);
+        }
+
+        if ($tiposMovimiento["tipo"] == "ENT") {
+
+            if ($this->request->isAJAX()) {
+                $datos = $this->products->mdlProductosEmpresaInventarioEntrada($empresasID, $empresa);
+                return \Hermawan\DataTables\DataTable::of($datos)->toJson(true);
+            }
+        }
+
+
+        if ($tiposMovimiento["tipo"] == "SAL") {
+
+            if ($this->request->isAJAX()) {
+                $datos = $this->products->mdlProductosEmpresaInventarioSalida($empresasID, $empresa);
+                return \Hermawan\DataTables\DataTable::of($datos)->toJson(true);
+            }
+        }
+
+
+        $datos = $this->products->mdlProductosEmpresaInventarioEntrada($empresasID, $empresa);
+        return \Hermawan\DataTables\DataTable::of($datos)->toJson(true);
+    }
+
 }

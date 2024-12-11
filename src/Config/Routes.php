@@ -45,5 +45,10 @@ $routes->group('admin', function ($routes) {
                 ,['namespace' => 'julio101290\boilerplateinventory\Controllers']
                 );
 
+    $routes->get('products/getAllProductsInventory/(:any)/(:any)/(:any)'
+                , 'InventoryController::getAllProductsInventory/$1/$2/$3'
+                ,['namespace' => 'julio101290\boilerplateinventory\Controllers']
+                );
+
 
 });
