@@ -95,8 +95,11 @@ class InventoryController extends BaseController {
      public function getAllProductsInventory($empresa, $idStorage, $idTipoMovimiento) {
 
 
+
+       
         helper('auth');
 
+   
         $idUser = user()->id;
         $titulos["empresas"] = $this->empresa->mdlEmpresasPorUsuario($idUser);
 
@@ -108,9 +111,8 @@ class InventoryController extends BaseController {
             $empresasID = array_column($titulos["empresas"], "id");
         }
 
-
         //BUSCAMOS EL TIPO DE MOVIMIENTO SI ES ENTRADA O SALIDA
-        $tiposMovimiento = $this->tiposMovimientoInventario->select("*")
+        $tiposMovimiento = $this->tiposMovimiento->select("*")
                         ->wherein("idEmpresa", $empresasID)
                         ->where("id", $idTipoMovimiento)->first();
 
@@ -140,6 +142,8 @@ class InventoryController extends BaseController {
 
         $datos = $this->products->mdlProductosEmpresaInventarioEntrada($empresasID, $empresa);
         return \Hermawan\DataTables\DataTable::of($datos)->toJson(true);
+
+     
     }
 
     public function inventoryFilters($desdeFecha, $hastaFecha, $todas) {
@@ -165,6 +169,7 @@ class InventoryController extends BaseController {
             $empresasID = array_column($titulos["empresas"], "id");
         }
 
+      
 
         if ($this->request->isAJAX()) {
 

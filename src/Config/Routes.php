@@ -46,9 +46,9 @@ $routes->group('admin', function ($routes) {
                 );
 
 
-    $routes->get('products/getAllProductsInventory/(:any)/(:any)/(:any)'
+    $routes->get('getAllProductsInventory/(:any)/(:any)/(:any)'
                 , 'InventoryController::getAllProductsInventory/$1/$2/$3'
-                ,['namespace' => 'julio101290\boilerplateinventory\Controllers']
+                , ['namespace' => 'julio101290\boilerplateinventory\Controllers']
                 );
 
 

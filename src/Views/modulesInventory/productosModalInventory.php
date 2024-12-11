@@ -57,7 +57,7 @@
         ],
 
         ajax: {
-            url: '<?= base_url('admin/products/getAllProductsInventory') ?>/0/0/0',
+            url: '<?= base_url('admin/getAllProductsInventory') ?>/0/0/0',
             method: 'GET',
             dataType: "json"
         },

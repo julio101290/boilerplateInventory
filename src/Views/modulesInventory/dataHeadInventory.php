@@ -921,7 +921,7 @@
                 idStorage = 0;
             }
 
-            tableProducts.ajax.url(`<?= base_url('admin/products/getAllProductsInventory') ?>/` + idEmpresa + '/' + idStorage + '/' + idTipoMovimiento).load();
+            tableProducts.ajax.url(`<?= base_url('admin/getAllProductsInventory') ?>/` + idEmpresa + '/' + idStorage + '/' + idTipoMovimiento).load();
         }
 
 <?php
