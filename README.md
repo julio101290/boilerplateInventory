@@ -1,7 +1,7 @@
 [![Latest Stable Version](https://poser.okvpn.org/julio101290/boilerplatetypesmovement/v/stable)](https://packagist.org/packages/julio101290/boilerplatetypesmovement) [![Total Downloads](https://poser.okvpn.org/julio101290/boilerplatetypesmovement/downloads)](https://packagist.org/packages/julio101290/boilerplatetypesmovement) [![Latest Unstable Version](https://poser.okvpn.org/julio101290/boilerplatetypesmovement/v/unstable)](https://packagist.org/packages/julio101290/boilerplatetypesmovement) [![License](https://poser.okvpn.org/julio101290/boilerplatetypesmovement/license)](https://packagist.org/packages/julio101290/boilerplatetypesmovement)
 
 ## CodeIgniter 4 Boilerplate Types Inventory
-CodeIgniter4 Boilerplatetypesmovement CRUD MVCfor the types of movement inventory, with fields as companye, description, type Input/Output, and it's transfer
+CodeIgniter4  Boilerplateinventory Create entries, exits and inventory transfer
 
 
 ## Requirements
@@ -17,13 +17,15 @@ CodeIgniter4 Boilerplatetypesmovement CRUD MVCfor the types of movement inventor
 
    	composer require hermawan/codeigniter4-datatables
 
-    composer require julio101290/boilerplatelog
+    	composer require julio101290/boilerplatelog
 
 	composer require julio101290/boilerplatecompanies
 
   	composer require julio101290/boilerplatestorages
 
 	composer require julio101290/boilerplatetypesmovement
+
+ 	composer require julio101290/boilerplateinventory
 
 ### Run command for migration and seeder
 
@@ -34,17 +36,22 @@ CodeIgniter4 Boilerplatetypesmovement CRUD MVCfor the types of movement inventor
   	php spark boilerplatestorages:installstorages
 
 	php spark boilerplatetypesmovement:installtypesmovement
+
+ 	boilerplateinventory:installinventory
 	
 
 # Make the Menu, Example
 
-![image](https://github.com/user-attachments/assets/e4a13d86-c714-4237-b29e-adb5616b7283)
+![image](https://github.com/user-attachments/assets/dc1f5b99-e260-4680-9cd2-62208ebc9a84)
 
+![image](https://github.com/user-attachments/assets/55a132ae-34a9-4200-ab77-11741d0096f7)
 
 
 # Ready
 
-![image](https://github.com/user-attachments/assets/34038a0e-533b-466e-bd4d-21ee439dad05)
+![image](https://github.com/user-attachments/assets/d306306e-a30a-481e-9443-edb86952634e)
+
+![image](https://github.com/user-attachments/assets/ca4928ea-01c2-41d4-9220-3bed32928cd1)
 
 
 
