@@ -1,6 +1,6 @@
 [![Latest Stable Version](https://poser.okvpn.org/julio101290/boilerplateinventory/v/stable)](https://packagist.org/packages/julio101290/boilerplateinventory) [![Total Downloads](https://poser.okvpn.org/julio101290/boilerplateinventory/downloads)](https://packagist.org/packages/julio101290/boilerplateinventory) [![Latest Unstable Version](https://poser.okvpn.org/julio101290/boilerplateinventory/v/unstable)](https://packagist.org/packages/julio101290/boilerplateinventory) [![License](https://poser.okvpn.org/julio101290/boilerplateinventory/license)](https://packagist.org/packages/julio101290/boilerplateinventory)
 
-## CodeIgniter 4 Boilerplate Types Inventory
+## CodeIgniter 4 Boilerplate Inventory
 CodeIgniter4  Boilerplateinventory Create entries, exits and inventory transfer
 
 
