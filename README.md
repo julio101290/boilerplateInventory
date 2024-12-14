@@ -37,7 +37,7 @@ CodeIgniter4  Boilerplateinventory Create entries, exits and inventory transfer
 
 	php spark boilerplatetypesmovement:installtypesmovement
 
- 	boilerplateinventory:installinventory
+ 	php spark boilerplateinventory:installinventory
 	
 
 # Make the Menu, Example
