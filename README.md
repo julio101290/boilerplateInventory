@@ -25,10 +25,6 @@ CodeIgniter4  Boilerplateinventory Create entries, exits and inventory transfer
 
 	composer require julio101290/boilerplatetypesmovement
 
- 	composer require julio101290/boilerplatesuppliers
-
-  	composer require julio101290/boilerplatecustumers
-
  	composer require julio101290/boilerplateinventory
 
 ### Run command for migration and seeder
@@ -41,11 +37,7 @@ CodeIgniter4  Boilerplateinventory Create entries, exits and inventory transfer
 
 	php spark boilerplatetypesmovement:installtypesmovement
 
- 	php spark boilerplatesuppliers:installsuppliers
-
- 	php spark boilerplatecustumers:installcustumers
-
- 	php spark boilerplateinventory:installinventory
+ 	boilerplateinventory:installinventory
 	
 
 # Make the Menu, Example

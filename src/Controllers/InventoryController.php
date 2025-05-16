@@ -83,8 +83,8 @@ class InventoryController extends BaseController {
         }
 
 
-        $titulos["listaTitle"] = "Administracion de ventas";
-        $titulos["listaSubtitle"] = "Muestra la lista de ventas";
+        $titulos["Title"] = lang("inventory.title");
+        $titulos["Subtitle"] = lang("inventory.subttle");
 
         //$data["data"] = $datos;
         return view('julio101290\boilerplateinventory\Views\inventory', $titulos);
