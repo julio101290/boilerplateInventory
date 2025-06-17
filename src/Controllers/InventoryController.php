@@ -116,17 +116,91 @@ class InventoryController extends BaseController {
                         ->wherein("idEmpresa", $empresasID)
                         ->where("id", $idTipoMovimiento)->first();
 
+        $request = service('request');
+
+        $start = $request->getGet('start') ?? 0;
+        $length = $request->getGet('length') ?? 10;
+        $searchValue = $request->getGet('search')['value'] ?? '';
+        $orderColumnIndex = $request->getGet('order')[0]['column'] ?? 0;
+        $orderDirection = $request->getGet('order')[0]['dir'] ?? 'asc';
+        $columns = $request->getGet('columns');
+
+        // Nombre de la columna para ordenar
+        $orderColumn = $columns[$orderColumnIndex]['data'];
+
         if ($tiposMovimiento == null) {
 
-            $datos = $this->products->mdlProductosEmpresaInventarioEntrada($empresasID, $empresa);
-            return \Hermawan\DataTables\DataTable::of($datos)->toJson(true);
+
+            // Base query
+            $builder = $this->products->mdlProductosEmpresaInventarioEntrada($empresasID, $empresa);
+
+            // Total de registros sin filtro
+            $totalRecords = $builder->countAllResults(false); // false: no reinicia query
+            // Buscar si hay texto
+            if (!empty($searchValue)) {
+                $builder->groupStart()
+                        ->like('a.code', $searchValue)
+                        ->orLike('a.description', $searchValue)
+                        ->orLike('b.nombre', $searchValue)
+                        ->groupEnd();
+            }
+
+            // Total de registros filtrados
+            $filteredRecords = $builder->countAllResults(false); // false: mantiene la query actual
+            // Ordenar
+            $builder->orderBy($orderColumn, $orderDirection);
+
+            // Paginación
+            $builder->limit($length, $start);
+
+            // Obtener datos
+            $results = $builder->get()->getResultArray();
+
+            // Respuesta en formato DataTables
+            return $this->response->setJSON([
+                        'draw' => intval($request->getGet('draw')),
+                        'recordsTotal' => $totalRecords,
+                        'recordsFiltered' => $filteredRecords,
+                        'data' => $results,
+            ]);
         }
 
         if ($tiposMovimiento["tipo"] == "ENT") {
 
             if ($this->request->isAJAX()) {
-                $datos = $this->products->mdlProductosEmpresaInventarioEntrada($empresasID, $empresa);
-                return \Hermawan\DataTables\DataTable::of($datos)->toJson(true);
+
+                // Base query
+                $builder = $this->products->mdlProductosEmpresaInventarioEntrada($empresasID, $empresa);
+
+                // Total de registros sin filtro
+                $totalRecords = $builder->countAllResults(false); // false: no reinicia query
+                // Buscar si hay texto
+                if (!empty($searchValue)) {
+                    $builder->groupStart()
+                            ->like('a.code', $searchValue)
+                            ->orLike('a.description', $searchValue)
+                            ->orLike('b.nombre', $searchValue)
+                            ->groupEnd();
+                }
+
+                // Total de registros filtrados
+                $filteredRecords = $builder->countAllResults(false); // false: mantiene la query actual
+                // Ordenar
+                $builder->orderBy($orderColumn, $orderDirection);
+
+                // Paginación
+                $builder->limit($length, $start);
+
+                // Obtener datos
+                $results = $builder->get()->getResultArray();
+
+                // Respuesta en formato DataTables
+                return $this->response->setJSON([
+                            'draw' => intval($request->getGet('draw')),
+                            'recordsTotal' => $totalRecords,
+                            'recordsFiltered' => $filteredRecords,
+                            'data' => $results,
+                ]);
             }
         }
 
@@ -134,8 +208,32 @@ class InventoryController extends BaseController {
         if ($tiposMovimiento["tipo"] == "SAL") {
 
             if ($this->request->isAJAX()) {
-                $datos = $this->products->mdlProductosEmpresaInventarioSalida($empresasID, $empresa);
-                return \Hermawan\DataTables\DataTable::of($datos)->toJson(true);
+                $builder = $this->products->mdlProductosEmpresaInventarioSalida($empresasID, $empresa);
+
+                $totalRecords = $builder->countAllResults(false);
+
+                if (!empty($searchValue)) {
+                    $builder->groupStart()
+                            ->like('a.code', $searchValue)
+                            ->orLike('a.description', $searchValue)
+                            ->orLike('b.nombre', $searchValue)
+                            ->orLike('c.lote', $searchValue)
+                            ->orLike('d.name', $searchValue)
+                            ->groupEnd();
+                }
+
+                $filteredRecords = $builder->countAllResults(false);
+
+                $builder->orderBy($orderColumn, $orderDirection);
+                $builder->limit($length, $start);
+                $results = $builder->get()->getResultArray();
+
+                return $this->response->setJSON([
+                            'draw' => intval($request->getGet('draw')),
+                            'recordsTotal' => $totalRecords,
+                            'recordsFiltered' => $filteredRecords,
+                            'data' => $results,
+                ]);
             }
         }
 
@@ -352,16 +450,14 @@ class InventoryController extends BaseController {
         $titulos["nombreTipoInventario"] = $tiposInventario["descripcion"];
 
         $titulos["idProveedor"] = $inventory["idProveedor"];
-             if(isset($inventory["nameProveedor"])){
-            
+        if (isset($inventory["nameProveedor"])) {
+
             $titulos["nameProveedor"] = $inventory["nameProveedor"];
-            
-        }else{
-            
-             $titulos["nameProveedor"] = $inventory["nameproveedor"];
-            
+        } else {
+
+            $titulos["nameProveedor"] = $inventory["nameproveedor"];
         }
-        
+
         $titulos["idEmpresa"] = $inventory["idEmpresa"];
         $titulos["nombreEmpresa"] = $inventory["nombreEmpresa"];
 
@@ -1212,32 +1308,29 @@ class InventoryController extends BaseController {
         $listProducts = json_decode($dataInventory["listProducts"], true);
 
         $user = $this->user->where("id", $dataInventory["idUser"])->first()->toArray();
-        
-        
-        if($dataInventory["tipoES"] =="SAL"){
-            
+
+        if ($dataInventory["tipoES"] == "SAL") {
+
             $custumer = $this->custumer->where("id", $dataInventory["idCustumer"])->where("deleted_at", null)->first();
-            
-                $clienteProveedor = <<<EOF
+
+            $clienteProveedor = <<<EOF
                 Cliente: $custumer[firstname] $custumer[lastname] 
                 
                 EOF;
 
-                $custumerData["email"] = $custumer["email"];
-            
-            
-        }else{
-            
+            $custumerData["email"] = $custumer["email"];
+        } else {
+
             $suppliers = $this->suppliers->where("id", $dataInventory["idProveedor"])->where("deleted_at", null)->first();
-            
-                $clienteProveedor = <<<EOF
+
+            $clienteProveedor = <<<EOF
                 Proveedor: $suppliers[firstname] $suppliers[lastname] 
                 
                 EOF;
-            
-                $custumerData["email"] = $suppliers["email"];
+
+            $custumerData["email"] = $suppliers["email"];
         }
-        
+
 
         $datosEmpresa = $this->empresa->select("*")->where("id", $dataInventory["idEmpresa"])->first();
         $datosEmpresaObj = $this->empresa->select("*")->where("id", $dataInventory["idEmpresa"])->asObject()->first();
@@ -1327,9 +1420,9 @@ class InventoryController extends BaseController {
             $comprobanteFactura = "";
             $fechaVencimiento = "";
         }
-        
-  
-    
+
+
+
         $bloque2 = <<<EOF
 
     
