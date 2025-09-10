@@ -21,6 +21,7 @@
                                         <th>Almacen</th>
                                         <th>lote</th>
                                         <th>Stock</th>
+                                        <th>Imagen</th>
                                         <th>Acciones</th>
                                     </tr>
                                 </thead>
@@ -85,6 +86,21 @@
 
             {
                 'data': 'stock'
+            },
+
+            {
+                "data": function (data) {
+
+                    if (data.routeImage == "") {
+                        data.routeImage = "anonymous.png";
+                    }
+
+                    return `<td class="text-right py-0 align-middle">
+                         <div class="btn-group btn-group-sm">
+                         <img src="<?= base_URL("images/products") ?>/${data.routeImage}" data-action="zoom" width="40px" class="" style="">
+                         </div>
+                         </td>`
+                }
             },
 
             {
