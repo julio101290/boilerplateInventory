@@ -16,6 +16,7 @@ use julio101290\boilerplatecustumers\Models\CustumersModel;
 use julio101290\boilerplatetypesmovement\Models\Tipos_movimientos_inventarioModel;
 use julio101290\boilerplateinventory\Models\SaldosModel;
 use julio101290\boilerplatesuppliers\Models\ProveedoresModel;
+use julio101290\boilerplatebranchoffice\Models\BranchofficesModel;
 
 class InventoryController extends BaseController {
 
@@ -32,6 +33,8 @@ class InventoryController extends BaseController {
     protected $tiposMovimiento;
     protected $saldos;
     protected $suppliers;
+    protected $branchOffice;
+    protected $category;
 
     public function __construct() {
         $this->log = new LogModel();
@@ -46,6 +49,8 @@ class InventoryController extends BaseController {
         $this->saldos = new SaldosModel();
         $this->storages = new StoragesModel();
         $this->suppliers = new ProveedoresModel();
+        $this->branchOffice = new BranchofficesModel();
+        $this->category = new \julio101290\boilerplateproducts\Models\CategoriasModel();
 
         helper('menu');
         helper('utilerias');
@@ -1068,6 +1073,91 @@ class InventoryController extends BaseController {
         }
 
         return;
+    }
+
+    /*
+     * Calculate Lot
+     */
+
+    public function calculateLot() {
+        $auth = service('authentication');
+
+        if (!$auth->check()) {
+            $this->session->set('redirect_url', current_url());
+            return redirect()->route('admin');
+        }
+
+        helper('auth');
+        $userName = user()->username;
+        $idUser = user()->id;
+
+        $datos = $this->request->getPost();
+
+        // GET STORAGE DATA
+        $dataStorage = $this->storages->select("*")
+                ->where("id", $datos["idAlmacen"])
+                ->first();
+
+        $keyStorage = $dataStorage["code"];
+
+        // GET DATA BRANCHOFFICE
+        $branchOfficeData = $this->branchOffice->select("*")
+                ->where("id", $dataStorage["idBranchOffice"])
+                ->first();
+
+        $branchOfficeKey = $branchOfficeData["key"];
+
+        // GET CATEGORY PRODUCT
+        $productData = $this->products->select("*")
+                ->where("id", $datos["idProducto"])
+                ->first();
+
+        $categoryData = $this->category->select("*")
+                ->where("id", $productData["idCategory"])
+                ->first();
+
+        $keyCategory = $categoryData["clave"];
+
+        // -----------------------------------------------------------
+        // 1) GENERAR NOMBRE BASE EJ: LMPLMLAPTOP
+        // -----------------------------------------------------------
+        $baseLot = $branchOfficeKey . $keyStorage . $keyCategory;
+
+        // -----------------------------------------------------------
+        // 2) BUSCAR EL ÚLTIMO LOTE QUE COMIENCE CON ESA BASE
+        // -----------------------------------------------------------
+        $lastBalance = $this->saldos
+                ->select("lote")
+                ->like("lote", $baseLot, "after")   // lote LIKE 'LMPLMLAPTOP%'
+                ->orderBy("lote", "DESC")           // ordenar por lote más grande
+                ->first();
+
+        // -----------------------------------------------------------
+        // 3) GENERAR CONSECUTIVO
+        // -----------------------------------------------------------
+        if ($lastBalance && !empty($lastBalance["lote"])) {
+
+            $lastLot = $lastBalance["lote"]; // Ej: LMPLMLAPTOP000015
+            // Extraer últimos 6 números
+            $lastNumber = intval(substr($lastLot, -6));
+
+            $newNumber = $lastNumber + 1;
+
+            $consecutivo = str_pad($newNumber, 6, "0", STR_PAD_LEFT);
+        } else {
+
+            // No hay lotes con esa base
+            $consecutivo = "000001";
+        }
+
+        // -----------------------------------------------------------
+        // 4) LOTE FINAL
+        // -----------------------------------------------------------
+        $lot = $baseLot . $consecutivo;
+
+        return $this->response->setJSON([
+                    "lot" => $lot
+        ]);
     }
 
     public function delete($id) {

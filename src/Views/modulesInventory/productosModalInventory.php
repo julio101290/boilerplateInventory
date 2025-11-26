@@ -107,7 +107,7 @@
                 "data": function (data) {
                     return `<td class="text-right py-0 align-middle">
                             <div class="btn-group btn-group-sm">
-                            <button class="btn bg-blue btnAddProduct" lote="${data.lote}" almacen="${data.almacen}" data-id="${data.id}" unidad="${data.unidad}" claveProductoSAT="${data.claveProductoSAT}" unidadSAT="${data.unidadSAT}" porcentIVARetenido="${data.porcentIVARetenido}" porcentISRRetenido="${data.porcentISRRetenido}" porcentTax="${data.porcentTax}" code="${data.code}" price = "${data.salePrice}" description = "${data.description}"><i class="fas fa-plus"></i></button>
+                            <button class="btn bg-blue btnAddProduct" lote="${data.lote}" calculatelot="${data.calculatelot}" almacen="${data.almacen}" data-id="${data.id}" unidad="${data.unidad}" claveProductoSAT="${data.claveProductoSAT}" unidadSAT="${data.unidadSAT}" porcentIVARetenido="${data.porcentIVARetenido}" porcentISRRetenido="${data.porcentISRRetenido}" porcentTax="${data.porcentTax}" code="${data.code}" price = "${data.salePrice}" description = "${data.description}"><i class="fas fa-plus"></i></button>
                             </div>
                             </td>`
                 }
@@ -120,13 +120,11 @@
      * Evento al hacer click al boton btnAgregarDiagnostico
      */
 
-
     $("#table-products").on("click", ".btnAddProduct", function () {
 
-
-
         var idProduct = $(this).attr("data-id");
-        var almacen = $(this).attr("almacen");
+        var almacen = $(".idStorage").val();
+        var calculatelot = $(this).attr("calculatelot");
         var lote = $(this).attr("lote");
         var description = $(this).attr("description");
         var codeProduct = $(this).attr("code");
@@ -138,66 +136,114 @@
         var unidad = $(this).attr("unidad");
         var claveProductoSAT = $(this).attr("claveProductoSAT");
 
-        if (porcentTax > 0) {
+        var datos = new FormData();
+        datos.append("idAlmacen", almacen);
+        datos.append("idProducto", idProduct);
 
-            var tax = ((porcentTax * 0.01)) * salePrice;
+        $.ajax({
+            url: "<?= base_url('admin/inventory/getLastLot') ?>",
+            method: "POST",
+            data: datos,
+            cache: false,
+            contentType: false,
+            processData: false,
+            dataType: "json",
+            success: function (respuesta) {
 
+                // --- 1) Lote base desde backend ---
+                var loteCalculado = respuesta.lot; // Ej: LMPLMLAPTOP000001
 
+                // Prefijo base sin el consecutivo
+                var loteBase = loteCalculado.slice(0, -6);  // LMPLMLAPTOP
 
-        } else {
+                // --- 2) Buscar lotes ya agregados en el formulario ---
+                var lotesActuales = [];
+                $(".rowProducts .lote").each(function () {
+                    var val = $(this).val();
+                    if (val.startsWith(loteBase)) {
+                        lotesActuales.push(val);
+                    }
+                });
 
-            var tax = 0;
-        }
+                // --- 3) Si no hay ninguno, usamos directamente el del backend ---
+                var loteFinal = loteCalculado;
 
-        if (porcentIVARetenido > 0) {
+                if (lotesActuales.length > 0) {
 
-            var IVARetenido = ((porcentIVARetenido * 0.01)) * salePrice;
-            $(".grupoTotalRetencionIVA").removeAttr("hidden");
+                    // Obtener el consecutivo mayor
+                    let max = 0;
+                    lotesActuales.forEach(function (lt) {
+                        let num = parseInt(lt.slice(-6));
+                        if (num > max)
+                            max = num;
+                    });
 
-        } else {
+                    let nuevo = max + 1;
+                    let newConsecutivo = String(nuevo).padStart(6, "0");
 
-            var IVARetenido = 0;
+                    loteFinal = loteBase + newConsecutivo;
+                }
 
-        }
+                // --- 4) Ahora sí, agregar el renglon ---
+                agregarRenglon(idProduct, codeProduct, loteFinal, description, salePrice,
+                        porcentTax, porcentIVARetenido, porcentISRRetenido,
+                        claveUnidadSAT, unidad, claveProductoSAT);
+            }
+        });
 
-        if (porcentISRRetenido > 0) {
+    });
 
-            var ISRRetenido = ((porcentISRRetenido * 0.01)) * salePrice;
-            $(".grupoTotalRetencionISR").removeAttr("hidden");
+// ----------------------------------------------
+//  FUNCIÓN QUE CONSTRUYE EL RENGLÓN
+// ----------------------------------------------
+    function agregarRenglon(idProduct, codeProduct, lote, description, salePrice,
+            porcentTax, porcentIVARetenido, porcentISRRetenido,
+            claveUnidadSAT, unidad, claveProductoSAT) {
 
-        } else {
-
-            var ISRRetenido = 0;
-
-        }
-
+        var tax = (porcentTax > 0) ? ((porcentTax * 0.01) * salePrice) : 0;
+        var IVARetenido = (porcentIVARetenido > 0) ? ((porcentIVARetenido * 0.01) * salePrice) : 0;
+        var ISRRetenido = (porcentISRRetenido > 0) ? ((porcentISRRetenido * 0.01) * salePrice) : 0;
 
         var neto = (((porcentTax * 0.01) + 1) * salePrice) - (IVARetenido + ISRRetenido);
 
-
-        /**
-         * Agregando registros
-         */
         var renglon = "<div class=\"form-group row nuevoProduct\">";
-        renglon = renglon + "<div class =\"col-1\"> <button type=\"button\" class=\"btn btn-danger quitProduct\" ><span class=\"far fa-trash-alt\"></span></button> ";
-        renglon = renglon + " <button type=\"button\"  data-toggle=\"modal\" data-target=\"#modelMoreInfoRow\" class=\"btn btn-primary  btnInfo\" ><span class=\"fa fa-fw fa-pencil-alt\"></span></button> </div>";
-        renglon = renglon + "<div class =\"col-1\"> <input type=\"hidden\" id=\"claveProductoSATR\" class=\"form-control claveProductoSATR\"  name=\"claveProductoSATR\" value=\"" + claveProductoSAT + "\" required=\"\">";
-        renglon = renglon + "<input type=\"hidden\" id=\"claveUnidadSatR\" class=\"form-control claveUnidadSatR\"  name=\"claveUnidadSatR\" value=\"" + claveUnidadSAT + "\" required=\"\">";
-        renglon = renglon + "<input type=\"hidden\" id=\"unidad\" class=\"form-control unidad\"  name=\"unidad\" value=\"" + unidad + "\" required=\"\">";
-        renglon = renglon + "<input type=\"text\" id=\"codeProduct\" class=\"form-control codeProduct\"  name=\"codeProduct\" value=\"" + codeProduct + "\" required=\"\"> </div>";
-        renglon = renglon + "<div class =\"col-1\"> <input type=\"text\" id=\"lote\" class=\"form-control lote\" idProducto =\"" + idProduct + "\" name=\"lote\"  value=\"" + lote + "\" required=\"\"> </div>";
-        renglon = renglon + "<div class =\"col-6\"> <input type=\"text\" id=\"description\" class=\"form-control description\" idProducto =\"" + idProduct + "\" name=\"description\" value=\"" + description + "\" required=\"\"> </div>";
-        renglon = renglon + "<div class =\"col-1\"> <input type=\"number\" id=\"cant\" class=\"form-control cant\"name=\"cant\" value=\"1\" required=\"\"><input type=\"hidden\" id=\"porcentIVARetenido\" class=\"form-control porcentIVARetenido\"name=\"porcentIVARetenido\" value=\"" + porcentIVARetenido + "\" required=\"\"><input type=\"hidden\" id=\"porcentISRRetenido\" class=\"form-control porcentISRRetenido\"name=\"porcentISRRetenido\" value=\"" + porcentISRRetenido + "\" required=\"\"> <input type=\"hidden\" id=\"porcentTax\" class=\"form-control porcentTax\"name=\"porcentTax\" value=\"" + porcentTax + "\" required=\"\"></div>";
-        renglon = renglon + "<div class =\"col-1\"> <input type=\"number\" id=\"price\" class=\"form-control price\"name=\"price\" value=\"" + salePrice + "\" required=\"\"> <input type=\"hidden\" id=\"IVARetenido\" class=\"form-control IVARetenido\"name=\"IVARetenido\" value=\"" + IVARetenido + "\" required=\"\"><input type=\"hidden\" id=\"ISRRetenido\" class=\"form-control ISRRetenido\"name=\"ISRRetenido\" value=\"" + ISRRetenido + "\" required=\"\"> <input type=\"hidden\" id=\"tax\" class=\"form-control tax\"name=\"tax\" value=\"" + tax + "\" required=\"\"> </div>";
 
+        renglon += "<div class=\"col-1\">";
+        renglon += "<button type=\"button\" class=\"btn btn-danger quitProduct\"><span class=\"far fa-trash-alt\"></span></button>";
+        renglon += " <button type=\"button\" data-toggle=\"modal\" data-target=\"#modelMoreInfoRow\" class=\"btn btn-primary btnInfo\"><span class=\"fa fa-fw fa-pencil-alt\"></span></button> ";
+        renglon += "<input type=\"hidden\" class=\"idProductR\" name=\"idProductR\" value=\"" + idProduct + "\">";  // <-- 🔥 AQUÍ VA
+        renglon += "</div>";
 
-        renglon = renglon + "<div class =\"col-1\"> <input readonly type=\"number\" id=\"total\" class=\"form-control total\" name=\"total\" value=\"" + salePrice + "\" required=\"\"> <input type=\"hidden\" id=\"neto\" class=\"form-control neto\" name=\"neto\" value=\"" + neto + "\" required=\"\"></div></div>";
+        renglon += "<div class=\"col-1\">";
+        renglon += "<input type=\"hidden\" class=\"claveProductoSATR\" name=\"claveProductoSATR\" value=\"" + claveProductoSAT + "\">";
+        renglon += "<input type=\"hidden\" class=\"claveUnidadSatR\" name=\"claveUnidadSatR\" value=\"" + claveUnidadSAT + "\">";
+        renglon += "<input type=\"hidden\" class=\"unidad\" name=\"unidad\" value=\"" + unidad + "\">";
+        renglon += "<input type=\"text\" class=\"form-control codeProduct\" name=\"codeProduct\" value=\"" + codeProduct + "\"> </div>";
+
+        renglon += "<div class=\"col-1\"> <input type=\"text\" class=\"form-control lote\" name=\"lote\" value=\"" + lote + "\" required> </div>";
+
+        renglon += "<div class=\"col-6\"> <input type=\"text\" class=\"form-control description\" name=\"description\" value=\"" + description + "\" required> </div>";
+
+        renglon += "<div class=\"col-1\"> <input type=\"number\" class=\"form-control cant\" name=\"cant\" value=\"1\" required>";
+        renglon += "<input type=\"hidden\" class=\"porcentIVARetenido\" name=\"porcentIVARetenido\" value=\"" + porcentIVARetenido + "\">";
+        renglon += "<input type=\"hidden\" class=\"porcentISRRetenido\" name=\"porcentISRRetenido\" value=\"" + porcentISRRetenido + "\">";
+        renglon += "<input type=\"hidden\" class=\"porcentTax\" name=\"porcentTax\" value=\"" + porcentTax + "\"></div>";
+
+        renglon += "<div class=\"col-1\"> <input type=\"number\" class=\"form-control price\" name=\"price\" value=\"" + salePrice + "\" required>";
+        renglon += "<input type=\"hidden\" class=\"IVARetenido\" name=\"IVARetenido\" value=\"" + IVARetenido + "\">";
+        renglon += "<input type=\"hidden\" class=\"ISRRetenido\" name=\"ISRRetenido\" value=\"" + ISRRetenido + "\">";
+        renglon += "<input type=\"hidden\" class=\"tax\" name=\"tax\" value=\"" + tax + "\"> </div>";
+
+        renglon += "<div class=\"col-1\"> <input readonly type=\"number\" class=\"form-control total\" name=\"total\" value=\"" + salePrice + "\">";
+        renglon += "<input type=\"hidden\" class=\"neto\" name=\"neto\" value=\"" + neto + "\"> </div>";
+
+        renglon += "</div>";
 
         $(".rowProducts").append(renglon);
 
         listProducts();
+    }
 
-    });
 
     var nombreDiv = "";
 

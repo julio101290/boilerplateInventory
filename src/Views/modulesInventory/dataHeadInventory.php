@@ -801,6 +801,7 @@
 
             var listProducts = [];
             var lote = $(".lote");
+            var idProduct = $(".idProductR");
             var description = $(".description");
             var codeProduct = $(".codeProduct");
             var cant = $(".cant");
@@ -824,7 +825,7 @@
             for (var i = 0; i < description.length; i++) {
 
                 listProducts.push({
-                    "idProduct": $(description[i]).attr("idProducto"),
+                    "idProduct": $(idProduct[i]).val(),
                     "lote": $(lote[i]).val(),
                     "description": $(description[i]).val(),
                     "codeProduct": $(codeProduct[i]).val(),

@@ -50,6 +50,10 @@ $routes->group('admin', function ($routes) {
                 , 'InventoryController::getAllProductsInventory/$1/$2/$3'
                 , ['namespace' => 'julio101290\boilerplateinventory\Controllers']
                 );
-
+    
+    $routes->post('inventory/getLastLot'
+            , 'InventoryController::calculateLot'
+            , ['namespace' => 'julio101290\boilerplateinventory\Controllers']
+    );
 
 });
