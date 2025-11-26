@@ -17,6 +17,7 @@ use julio101290\boilerplatetypesmovement\Models\Tipos_movimientos_inventarioMode
 use julio101290\boilerplateinventory\Models\SaldosModel;
 use julio101290\boilerplatesuppliers\Models\ProveedoresModel;
 use julio101290\boilerplatebranchoffice\Models\BranchofficesModel;
+use julio101290\boilerplateproducts\Models\SubcategoriasModel;
 
 class InventoryController extends BaseController {
 
@@ -35,6 +36,7 @@ class InventoryController extends BaseController {
     protected $suppliers;
     protected $branchOffice;
     protected $category;
+    protected $subCategory;
 
     public function __construct() {
         $this->log = new LogModel();
@@ -51,6 +53,7 @@ class InventoryController extends BaseController {
         $this->suppliers = new ProveedoresModel();
         $this->branchOffice = new BranchofficesModel();
         $this->category = new \julio101290\boilerplateproducts\Models\CategoriasModel();
+        $this->subCategory = new SubcategoriasModel();
 
         helper('menu');
         helper('utilerias');
@@ -1117,7 +1120,12 @@ class InventoryController extends BaseController {
                 ->first();
 
         $keyCategory = $categoryData["clave"];
-
+        
+          $subCategoryData = $this->subCategory->select("*")
+                ->where("id", $productData["idSubCategoria"])
+                ->first();
+        $keyCategory = $subCategoryData["descripcion"];
+        
         // -----------------------------------------------------------
         // 1) GENERAR NOMBRE BASE EJ: LMPLMLAPTOP
         // -----------------------------------------------------------
