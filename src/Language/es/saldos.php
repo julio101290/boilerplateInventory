@@ -1,31 +1,31 @@
 <?php
 
-$saldos["logDescription"] = "Der Saldo wurde mit den folgenden Daten gespeichert:";
-$saldos["logUpdate"] = "Der Saldo wurde mit den folgenden Daten aktualisiert:";
-$saldos["logDeleted"] = "Der Saldo wurde mit den folgenden Daten gelöscht:";
-$saldos["msg_delete"] = "Der Saldo wurde erfolgreich gelöscht:";
+$saldos["logDescription"] = "El saldo fue guardado con los siguientes datos:";
+$saldos["logUpdate"] = "El saldo fue actualizado con los siguientes datos:";
+$saldos["logDeleted"] = "El saldo fue eliminado con los siguientes datos:";
+$saldos["msg_delete"] = "El saldo fue eliminado correctamente:";
 
-$saldos["add"] = "Saldo hinzufügen";
-$saldos["edit"] = "Saldo bearbeiten";
-$saldos["createEdit"] = "Erstellen / Bearbeiten";
-$saldos["title"] = "Saldenverwaltung";
-$saldos["subtitle"] = "Saldenliste";
-$saldos["fields"]["idEmpresa"] = "Unternehmen";
-$saldos["fields"]["idAlmacen"] = "Lager";
-$saldos["fields"]["lote"] = "Charge";
-$saldos["fields"]["idProducto"] = "Produkt-ID";
-$saldos["fields"]["codigoProducto"] = "Produktcode";
-$saldos["fields"]["descripcion"] = "Beschreibung";
-$saldos["fields"]["cantidad"] = "Menge";
-$saldos["fields"]["created_at"] = "Erstellt am";
-$saldos["fields"]["updated_at"] = "Aktualisiert am";
-$saldos["fields"]["deleted_at"] = "Gelöscht am";
+$saldos["add"] = "Agregar Saldo";
+$saldos["edit"] = "Editar saldo";
+$saldos["createEdit"] = "Crear / Editar";
+$saldos["title"] = "Gestión de saldos";
+$saldos["subtitle"] = "Lista de saldos";
+$saldos["fields"]["idEmpresa"] = "Empresa";
+$saldos["fields"]["idAlmacen"] = "Almacén";
+$saldos["fields"]["lote"] = "Lote";
+$saldos["fields"]["idProducto"] = "IdProducto";
+$saldos["fields"]["codigoProducto"] = "Código de Producto";
+$saldos["fields"]["descripcion"] = "Descripción";
+$saldos["fields"]["cantidad"] = "Cantidad";
+$saldos["fields"]["created_at"] = "Creado el";
+$saldos["fields"]["updated_at"] = "Actualizado el";
+$saldos["fields"]["deleted_at"] = "Eliminado el";
 
-$saldos["fields"]["actions"] = "Aktionen";
-$saldos["msg"]["msg_insert"] = "Der Saldo wurde korrekt hinzugefügt.";
-$saldos["msg"]["msg_update"] = "Der Saldo wurde korrekt geändert.";
-$saldos["msg"]["msg_delete"] = "Der Saldo wurde korrekt gelöscht.";
-$saldos["msg"]["msg_get"] = "Der Saldo wurde erfolgreich abgerufen.";
-$saldos["msg"]["msg_get_fail"] = "Der Saldo wurde nicht gefunden oder ist bereits gelöscht.";
+$saldos["fields"]["actions"] = "Acciones";
+$saldos["msg"]["msg_insert"] = "El saldo se ha añadido correctamente.";
+$saldos["msg"]["msg_update"] = "El saldo se ha modificado correctamente.";
+$saldos["msg"]["msg_delete"] = "El saldo se ha eliminado correctamente.";
+$saldos["msg"]["msg_get"] = "El Saldo se ha obtenido exitosamente.";
+$saldos["msg"]["msg_get_fail"] = "El saldo no se encontró o ya fue eliminado.";
 
 return $saldos;
