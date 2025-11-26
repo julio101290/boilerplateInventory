@@ -39,19 +39,22 @@ class SaldosModel extends Model {
 
     public function mdlGetSaldos($idEmpresas) {
 
-        $result = $this->db->table('saldos a, empresas b')
+        $result = $this->db->table('saldos a')
                 ->select('a.id
-                         ,a.idEmpresa
-                         ,a.idAlmacen
-                         ,a.idProducto
-                         ,a.codigoProducto
-                         ,a.descripcion
-                         ,a.cantidad
-                         ,a.created_at
-                         ,a.deleted_at
-                         ,a.updated_at 
-                         ,b.nombre as nombreEmpresa')
-                ->where('a.idEmpresa', 'b.id', FALSE)
+             ,a.idEmpresa
+             ,a.idAlmacen
+             ,a.idProducto
+             ,a.codigoProducto
+             ,a.lote
+             ,a.descripcion
+             ,a.cantidad
+             ,a.created_at
+             ,a.deleted_at
+             ,a.updated_at
+             ,b.nombre AS nombreEmpresa
+             ,c.name AS nombreAlmacen')
+                ->join('empresas b', 'a.idEmpresa = b.id')
+                ->join('storages c', 'a.idAlmacen = c.id')   
                 ->whereIn('a.idEmpresa', $idEmpresas);
 
         return $result;

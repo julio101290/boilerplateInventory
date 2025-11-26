@@ -11,49 +11,60 @@ $routes->group('admin', function ($routes) {
     ]);
 
     $routes->get('nuevoMovimientoInventario'
-                , 'InventoryController::newInventory'
-                ,['namespace' => 'julio101290\boilerplateinventory\Controllers']
-                );
+            , 'InventoryController::newInventory'
+            , ['namespace' => 'julio101290\boilerplateinventory\Controllers']
+    );
 
     $routes->get('newInventory'
-                    , 'InventoryController::newInventory'
-                    ,['namespace' => 'julio101290\boilerplateinventory\Controllers']
-                );
+            , 'InventoryController::newInventory'
+            , ['namespace' => 'julio101290\boilerplateinventory\Controllers']
+    );
 
     $routes->get('editInventory/(:any)'
-                , 'InventoryController::editInventory/$1'
-                ,['namespace' => 'julio101290\boilerplateinventory\Controllers']
-                );
+            , 'InventoryController::editInventory/$1'
+            , ['namespace' => 'julio101290\boilerplateinventory\Controllers']
+    );
 
     $routes->post('inventory/save'
-                , 'InventoryController::save'
-                ,['namespace' => 'julio101290\boilerplateinventory\Controllers']
-                );
+            , 'InventoryController::save'
+            , ['namespace' => 'julio101290\boilerplateinventory\Controllers']
+    );
 
     $routes->post('inventory/getLastCode'
-                    , 'InventoryController::getLastCode'
-                    ,['namespace' => 'julio101290\boilerplateinventory\Controllers']
-                    );
-                    
+            , 'InventoryController::getLastCode'
+            , ['namespace' => 'julio101290\boilerplateinventory\Controllers']
+    );
+
     $routes->get('inventory/report/(:any)'
-                , 'InventoryController::report/$1'
-                ,['namespace' => 'julio101290\boilerplateinventory\Controllers']
-                );
+            , 'InventoryController::report/$1'
+            , ['namespace' => 'julio101290\boilerplateinventory\Controllers']
+    );
 
     $routes->get('inventory/(:any)/(:any)/(:any)'
-                , 'InventoryController::inventoryFilters/$1/$2/$3'
-                ,['namespace' => 'julio101290\boilerplateinventory\Controllers']
-                );
-
+            , 'InventoryController::inventoryFilters/$1/$2/$3'
+            , ['namespace' => 'julio101290\boilerplateinventory\Controllers']
+    );
 
     $routes->get('getAllProductsInventory/(:any)/(:any)/(:any)'
-                , 'InventoryController::getAllProductsInventory/$1/$2/$3'
-                , ['namespace' => 'julio101290\boilerplateinventory\Controllers']
-                );
-    
+            , 'InventoryController::getAllProductsInventory/$1/$2/$3'
+            , ['namespace' => 'julio101290\boilerplateinventory\Controllers']
+    );
+
     $routes->post('inventory/getLastLot'
             , 'InventoryController::calculateLot'
             , ['namespace' => 'julio101290\boilerplateinventory\Controllers']
     );
 
+    $routes->resource('saldos', [
+        'filter' => 'permission:saldos-permission',
+        'controller' => 'saldosController',
+        'namespace' => 'julio101290\boilerplateinventory\Controllers',
+        'except' => 'show'
+    ]);
+
+  $routes->get('saldos/barcode/(:any)'
+            , 'SaldosController::getBarcodePDF/$1'
+            , ['namespace' => 'julio101290\boilerplateinventory\Controllers']
+    );
+ 
 });
