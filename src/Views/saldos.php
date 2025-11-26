@@ -7,12 +7,7 @@
 <div class="card card-default">
     <div class="card-header">
         <div class="float-right">
-            <div class="btn-group">
 
-                <button class="btn btn-primary btnAddSaldos" data-toggle="modal" data-target="#modalAddSaldos">
-                    <i class="fa fa-plus"></i> <?= lang('saldos.add') ?>
-                </button>
-            </div>
 
             <div class="btn-group">
                 <button class="btn btn-primary btnPrintCodes" data-toggle="modal">
