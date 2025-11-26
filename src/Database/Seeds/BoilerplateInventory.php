@@ -38,11 +38,17 @@ class BoilerplateInventory extends Seeder {
 
         // Permission
         $this->authorize->createPermission('inventory-permission', 'Permission to view inventory list');
+        
+        $this->authorize->createPermission('saldos-permission', 'Permission to view inventory balance');
 
         // Assign Permission to user
         $this->authorize->addPermissionToUser('inventory-permission', 1);
+        $this->authorize->addPermissionToUser('saldos-permission', 1);
 
     }
+    
+    
+    
 
     public function down() {
         //
