@@ -4,6 +4,9 @@
 <?= $this->extend('julio101290\boilerplate\Views\layout\index') ?>
 <?= $this->section('content') ?>
 <?= $this->include('julio101290\boilerplateinventory\Views\modulesSaldos/modalCaptureSaldos') ?>
+<?= $this->include('julio101290\boilerplateinventory\Views\modulesSaldos/extraFields') ?>
+<?= $this->include('julio101290\boilerplatemaintenance\Views/modulesProductsEmployes/modalEmployesProducts') ?>
+
 <div class="card card-default">
     <div class="card-header">
         <div class="float-right">
@@ -82,10 +85,10 @@
                 "data": function (data) {
                     return `<td class="text-right py-0 align-middle">
                          <div class="btn-group btn-group-sm">
-                             <button class="btn btn-warning btnEditSaldos" data-toggle="modal" idSaldos="${data.id}" data-target="#modalAddSaldos">  <i class=" fa fa-edit"></i></button>
-                             <button class="btn btn-danger btn-delete" data-id="${data.id}"><i class="fas fa-trash"></i></button>
                              <button class="btn btn-success btn-barcode" data-id="${data.id}"><i class="fas fa-barcode"></i></button>
-                         </div>
+                             <button class="btn btn-primary btnEditExtra" data-toggle="modal" idSaldos="${data.id}" data-target="#modalAddExtraFields">  <i class=" fa fa-plus"></i></button>
+                             <button class="btn btn-info btnAddEmploye" data-toggle="modal" idProducts="${data.id}" data-target="#modalProductoEmploye">  <i class=" fa fa-user"></i></button>
+                            </div>
                          </td>`
                 }
             }
@@ -185,12 +188,40 @@
     });
 
 
-    $(".btnPrintCodes").on("click",  function () {
+    $(".btnPrintCodes").on("click", function () {
 
-        window.open("<?= base_url('admin/saldos/barcode/') ?>" + "/0" , "_blank");
-
+        window.open("<?= base_url('admin/saldos/barcode/') ?>" + "/0", "_blank");
 
     });
+
+
+    $(".tableSaldos").on("click", ".btnEditExtra", function () {
+
+        var idBalance = $(this).attr("idsaldos");
+
+        console.log("idBalance:", idBalance);
+
+        var datos = new FormData();
+        datos.append("idBalance", idBalance);
+
+        $.ajax({
+
+            url: "<?= base_url('admin/saldos/getProductsFieldsExtra') ?>",
+            method: "POST",
+            data: datos,
+            cache: false,
+            contentType: false,
+            processData: false,
+            success: function (respuesta) {
+
+                $(".extraFields").html(respuesta);
+
+            }
+
+        })
+
+    });
+
 
 
     $(".tableSaldos").on("click", ".btn-delete", function () {

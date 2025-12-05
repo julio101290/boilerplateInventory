@@ -1120,12 +1120,12 @@ class InventoryController extends BaseController {
                 ->first();
 
         $keyCategory = $categoryData["clave"];
-        
-          $subCategoryData = $this->subCategory->select("*")
+
+        $subCategoryData = $this->subCategory->select("*")
                 ->where("id", $productData["idSubCategoria"])
                 ->first();
         $keyCategory = $subCategoryData["descripcion"];
-        
+
         // -----------------------------------------------------------
         // 1) GENERAR NOMBRE BASE EJ: LMPLMLAPTOP
         // -----------------------------------------------------------
@@ -1247,7 +1247,8 @@ class InventoryController extends BaseController {
                     $this->inventory->db->transRollback();
                     return $this->failNotFound('Error al actualizar el Stock');
                 }
-
+                $db = \Config\Database::connect();
+                log_message('error', $db->error()['message']);
 
                 $datosSaldo["idEmpresa"] = $infoInventory["idEmpresa"];
 
@@ -1255,7 +1256,11 @@ class InventoryController extends BaseController {
                 $datosSaldo["idProducto"] = $value["idProduct"];
                 $datosSaldo["lote"] = $value["lote"];
 
-                $datosNuevosSaldo = $this->saldos->select("*")->where($datosSaldo)->first();
+                $datosNuevosSaldo = $this->saldos
+                        ->where($datosSaldo)
+                        ->first();
+
+             
 
                 $nuevoSaldo["cantidad"] = $datosNuevosSaldo["cantidad"] - $value["cant"];
 

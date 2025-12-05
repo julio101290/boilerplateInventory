@@ -62,9 +62,18 @@ $routes->group('admin', function ($routes) {
         'except' => 'show'
     ]);
 
-  $routes->get('saldos/barcode/(:any)'
+    $routes->get('saldos/barcode/(:any)'
             , 'SaldosController::getBarcodePDF/$1'
             , ['namespace' => 'julio101290\boilerplateinventory\Controllers']
     );
- 
+
+    $routes->post('saldos/saveExtraFields'
+            , 'SaldosController::saveExtraFields'
+            , ['namespace' => 'julio101290\boilerplateinventory\Controllers']
+    );
+
+    $routes->post('saldos/getProductsFieldsExtra'
+            , 'SaldosController::getProductsFieldsExtra'
+            , ['namespace' => 'julio101290\boilerplateinventory\Controllers']
+    );
 });
