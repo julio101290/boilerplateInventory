@@ -31,6 +31,7 @@
                                 <th><?= lang('saldos.fields.idEmpresa') ?></th>
                                 <th><?= lang('saldos.fields.idAlmacen') ?></th>
                                 <th><?= lang('saldos.fields.lote') ?></th>
+                                <th><?= lang('saldos.fields.fullname') ?></th>
                                 <th><?= lang('saldos.fields.idProducto') ?></th>
                                 <th><?= lang('saldos.fields.codigoProducto') ?></th>
                                 <th><?= lang('saldos.fields.descripcion') ?></th>
@@ -65,14 +66,15 @@
         },
         columnDefs: [{
                 orderable: false,
-                targets: [11],
+                targets: [12],
                 searchable: false,
-                targets: [11]
+                targets: [12]
             }],
         columns: [{'data': 'id'},
             {'data': 'nombreEmpresa'},
             {'data': 'nombreAlmacen'},
             {'data': 'lote'},
+            {'data': 'fullname'},
             {'data': 'idProducto'},
             {'data': 'codigoProducto'},
             {'data': 'descripcion'},

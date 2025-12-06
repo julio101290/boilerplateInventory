@@ -13,6 +13,7 @@ $saldos["subtitle"] = "Lista de saldos";
 $saldos["fields"]["idEmpresa"] = "Empresa";
 $saldos["fields"]["idAlmacen"] = "Almacén";
 $saldos["fields"]["lote"] = "Lote";
+$saldos["fields"]["fullname"] = "Asignado A";
 $saldos["fields"]["idProducto"] = "IdProducto";
 $saldos["fields"]["codigoProducto"] = "Código de Producto";
 $saldos["fields"]["descripcion"] = "Descripción";

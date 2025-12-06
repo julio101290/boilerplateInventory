@@ -38,25 +38,35 @@ class SaldosModel extends Model {
     protected $skipValidation = false;
 
     public function mdlGetSaldos($idEmpresas) {
+        return $this->db->table('saldos a')
+                        ->select("
+            a.id
+            ,a.idEmpresa
+            ,a.idAlmacen
+            ,a.idProducto
+            ,a.codigoProducto
+            ,a.lote
+            ,a.descripcion
+            ,a.cantidad
+            ,a.created_at
+            ,a.deleted_at
+            ,a.updated_at
+            ,b.nombre AS nombreEmpresa
+            ,c.name AS nombreAlmacen
+            ,COALESCE(e.fullname, 'Sin asignar') AS fullname
+        ")
 
-        $result = $this->db->table('saldos a')
-                ->select('a.id
-             ,a.idEmpresa
-             ,a.idAlmacen
-             ,a.idProducto
-             ,a.codigoProducto
-             ,a.lote
-             ,a.descripcion
-             ,a.cantidad
-             ,a.created_at
-             ,a.deleted_at
-             ,a.updated_at
-             ,b.nombre AS nombreEmpresa
-             ,c.name AS nombreAlmacen')
-                ->join('empresas b', 'a.idEmpresa = b.id')
-                ->join('storages c', 'a.idAlmacen = c.id')   
-                ->whereIn('a.idEmpresa', $idEmpresas);
+                        // Empresas
+                        ->join('empresas b', 'a.idEmpresa = b.id')
 
-        return $result;
+                        // Almacenes
+                        ->join('storages c', 'a.idAlmacen = c.id')
+
+                        // 👇 LEFT JOIN para que NO reviente si no hay relación en productsEmployes
+                        ->join('productsEmployes pe', 'pe.idProduct = a.id', 'left')
+
+                        // 👇 LEFT JOIN para que NO reviente si no hay empleado
+                        ->join('employes e', 'e.id = pe.idEmploye', 'left')
+                        ->whereIn('a.idEmpresa', $idEmpresas);
     }
 }
