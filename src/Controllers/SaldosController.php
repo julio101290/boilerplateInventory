@@ -80,8 +80,8 @@ class SaldosController extends BaseController {
             ]);
         }
 
-        $titulos["title"] = lang('saldos.title');
-        $titulos["subtitle"] = lang('saldos.subtitle');
+        $titulos["title"] = "Info Productos";
+        $titulos["subtitle"] = "Extrae la información de los productos por el codigo de barras";
         return view('julio101290\boilerplateinventory\Views\saldos', $titulos);
     }
 
@@ -98,6 +98,18 @@ class SaldosController extends BaseController {
                 ->first();
 
         return $this->response->setJSON($dato);
+    }
+
+    public function getGetInfoProducts() {
+
+        helper('auth');
+        $idUser = user()->id;
+        $titulos["empresas"] = $this->empresa->mdlEmpresasPorUsuario($idUser);
+        $empresasID = count($titulos["empresas"]) === 0 ? [0] : array_column($titulos["empresas"], "id");
+
+        $titulos["title"] = lang('saldos.title');
+        $titulos["subtitle"] = lang('saldos.subtitle');
+        return view('julio101290\boilerplateinventory\Views\infoInventario', $titulos);
     }
 
     public function save() {
@@ -252,9 +264,9 @@ class SaldosController extends BaseController {
         }
         $idBalance = $this->request->getPost("idBalance");
 
-        $datosBalance = $this->saldos->where("id",$idBalance)->asObject()->first();
-        
-        $dataProduct = $this->products->where("id",$datosBalance->idProducto)->asObject()->first();
+        $datosBalance = $this->saldos->where("id", $idBalance)->asObject()->first();
+
+        $dataProduct = $this->products->where("id", $datosBalance->idProducto)->asObject()->first();
 
         //GET FIELD EXTRA
         $fieldExtra = $this->fieldsExtra->select("*")
@@ -263,8 +275,6 @@ class SaldosController extends BaseController {
                 ->findAll();
 
         $html = '';
-
-
 
 // 🔹 Siempre agregar este campo oculto con el valor de $idProducts
         $html = '<input type="hidden" id="idProductExtraFields" name="idProductExtraFields" value="' . $idBalance . '">';

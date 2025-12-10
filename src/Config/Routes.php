@@ -76,4 +76,15 @@ $routes->group('admin', function ($routes) {
             , 'SaldosController::getProductsFieldsExtra'
             , ['namespace' => 'julio101290\boilerplateinventory\Controllers']
     );
+    
+    
+    /*
+     * Info inventpry for get producto with qrcode image
+     */
+    
+    $routes->get('infoinventario'
+            , 'SaldosController::getGetInfoProducts'
+            , ['namespace' => 'julio101290\boilerplateinventory\Controllers']
+    );
+    
 });

@@ -63,7 +63,7 @@ class SaldosModel extends Model {
                         ->join('storages c', 'a.idAlmacen = c.id')
 
                         // 👇 LEFT JOIN para que NO reviente si no hay relación en productsEmployes
-                        ->join('productsEmployes pe', 'pe.idProduct = a.id', 'left')
+                        ->join('productsemployes pe', 'pe.idProduct = a.id', 'left')
 
                         // 👇 LEFT JOIN para que NO reviente si no hay empleado
                         ->join('employes e', 'e.id = pe.idEmploye', 'left')
