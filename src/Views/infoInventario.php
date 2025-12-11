@@ -16,7 +16,6 @@
     background: #000;
 }
 
-/* Cuadro de escaneo */
 .scan-area {
     position: absolute;
     border: 3px solid #00ff00;
@@ -24,10 +23,10 @@
     height: 40%;
     top: 30%;
     left: 20%;
-    box-sizing: border-box;
     border-radius: 8px;
     pointer-events: none;
 }
+
 .scanner-wrapper {
     position: relative;
     width: 100%;
@@ -41,11 +40,22 @@
 
             <div class="col-md-6">
 
-                <label>Código escaneado</label>
+                <!-- SWITCH MODO MANUAL - CAMARA -->
+                <label class="mt-2">Modo de captura</label><br>
+                <label>
+                    <input type="checkbox" id="switchManual">
+                    <span>Modo manual</span>
+                </label>
+
+                <br><br>
+
+                <label>Código</label>
                 <input type="text" id="codigo" class="form-control" placeholder="Esperando código…">
 
-                <button id="btnStart" class="btn btn-success mt-3">Iniciar lector</button>
+                <button id="btnStart" class="btn btn-success mt-3">Iniciar cámara</button>
                 <button id="btnStop" class="btn btn-danger mt-3" style="display:none;">Detener</button>
+
+                <button id="btnFlash" class="btn btn-warning mt-3" style="display:none;">Linterna ON/OFF</button>
 
                 <div class="scanner-wrapper mt-3">
                     <video id="preview" autoplay></video>
@@ -59,16 +69,40 @@
 </div>
 
 <?= $this->endSection() ?>
-
 <?= $this->section('js') ?>
 
-<!-- ZXing estable sin módulos (0.1.5) -->
 <script src="https://unpkg.com/@zxing/browser@0.1.5/umd/zxing-browser.min.js"></script>
 
 <script>
+
 let reader = null;
+let track = null; 
+let torchEnabled = false;
 let scanning = false;
 
+// =============================================================
+//                   MODO MANUAL / CAMARA
+// =============================================================
+document.getElementById('switchManual').addEventListener('change', function () {
+    const manual = this.checked;
+
+    if (manual) {
+        // Ocultar cámara
+        document.getElementById('btnStart').style.display = "none";
+        document.getElementById('btnStop').style.display = "none";
+        document.getElementById('btnFlash').style.display = "none";
+        document.getElementById('preview').style.display = "none";
+
+        if (reader) reader.reset();
+    } else {
+        // Mostrar botón de cámara
+        document.getElementById('btnStart').style.display = "inline-block";
+    }
+});
+
+// =============================================================
+//                 INICIAR CAMARA (ZXING)
+// =============================================================
 document.getElementById('btnStart').addEventListener('click', async () => {
 
     const video = document.getElementById('preview');
@@ -76,75 +110,114 @@ document.getElementById('btnStart').addEventListener('click', async () => {
 
     document.getElementById('btnStart').style.display = "none";
     document.getElementById('btnStop').style.display = "inline-block";
+    document.getElementById('btnFlash').style.display = "inline-block";
 
     reader = new ZXingBrowser.BrowserMultiFormatReader();
 
     try {
         const devices = await ZXingBrowser.BrowserMultiFormatReader.listVideoInputDevices();
-
-        if (!devices || devices.length === 0) {
-            alert("No se detectan cámaras en el dispositivo.");
+        if (!devices.length) {
+            alert("No hay cámaras disponibles");
             return;
         }
 
-        // Preferir cámara trasera
         const deviceId = devices.length > 1 ? devices[devices.length - 1].deviceId : devices[0].deviceId;
 
         scanning = true;
 
         reader.decodeFromVideoDevice(deviceId, video, (result, err) => {
-
             if (result) {
-                const codigo = result.text.trim();
+                const code = result.text.trim();
+                document.getElementById('codigo').value = code;
 
-                console.log("Código detectado:", codigo);
+                enviarCodigo(code);
 
-                document.getElementById('codigo').value = codigo;
-
-                reader.reset();
-                scanning = false;
-                video.style.display = "none";
-
-                document.getElementById('btnStart').style.display = "inline-block";
-                document.getElementById('btnStop').style.display = "none";
+                detenerScanner();
             }
         });
 
-        // Ajustes de video (autofocus y exposición)
-        const track = (await navigator.mediaDevices.getUserMedia({
-            video: {
-                deviceId: { exact: deviceId },
-                focusMode: "continuous",
-                exposureMode: "continuous",
-                torch: false,        // podemos activar después si quieres
-                width: { ideal: 1280 },
-                height: { ideal: 720 }
-            }
-        })).getVideoTracks()[0];
+        // Obtener TRACK de cámara (para usar linterna)
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: { deviceId: { exact: deviceId } }
+        });
 
-        // Intentar autofocus
-        if (track && track.applyConstraints) {
-            track.applyConstraints({
-                advanced: [
-                    { focusMode: "continuous" },
-                    { exposureMode: "continuous" }
-                ]
-            }).catch(() => {});
-        }
+        track = stream.getVideoTracks()[0];
 
     } catch (err) {
-        console.error("Error iniciando cámara:", err);
-        alert("No se pudo iniciar la cámara. Usa Chrome en Android.");
+        alert("Error iniciando cámara");
+        console.error(err);
     }
 });
 
-document.getElementById('btnStop').addEventListener('click', () => {
+// =============================================================
+//                 DETENER CAMARA
+// =============================================================
+function detenerScanner() {
     if (reader) reader.reset();
     scanning = false;
+
     document.getElementById('preview').style.display = "none";
     document.getElementById('btnStart').style.display = "inline-block";
     document.getElementById('btnStop').style.display = "none";
+    document.getElementById('btnFlash').style.display = "none";
+
+    if (track) {
+        track.stop();
+        track = null;
+    }
+}
+
+document.getElementById('btnStop').addEventListener('click', detenerScanner);
+
+// =============================================================
+//                 LINTERNAAA (TORCH)
+// =============================================================
+document.getElementById('btnFlash').addEventListener('click', async () => {
+    if (!track) {
+        alert("Cámara no lista");
+        return;
+    }
+
+    const capabilities = track.getCapabilities();
+    if (!capabilities.torch) {
+        alert("El dispositivo no soporta linterna");
+        return;
+    }
+
+    torchEnabled = !torchEnabled;
+
+    try {
+        await track.applyConstraints({
+            advanced: [{ torch: torchEnabled }]
+        });
+    } catch (e) {
+        console.error(e);
+    }
 });
+
+// =============================================================
+//        ENVÍO AJAX POST AL DETECTAR O AL DAR ENTER
+// =============================================================
+function enviarCodigo(code) {
+    console.log("ENVIANDO AJAX:", code);
+
+    $.post("<?= base_url('ruta/generica') ?>", 
+    { codigo: code },
+    function (resp) {
+        console.log("Respuesta AJAX:", resp);
+    });
+}
+
+// ENTER en modo manual
+document.getElementById('codigo').addEventListener('keypress', function (e) {
+    if (e.key === "Enter") {
+        const code = this.value.trim();
+        if (code !== "") {
+            enviarCodigo(code);
+        }
+    }
+});
+
 </script>
 
 <?= $this->endSection() ?>
