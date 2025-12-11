@@ -2,127 +2,118 @@
 <?= $this->include('julio101290\boilerplate\Views\load/toggle') ?>
 <?= $this->include('julio101290\boilerplate\Views\load\datatables') ?>
 
-<!-- Extend from layout index -->
 <?= $this->extend('julio101290\boilerplate\Views\layout\index') ?>
 
-<!-- Section content -->
 <?= $this->section('content') ?>
 
-
-<!-- SELECT2 EXAMPLE -->
 <div class="card card-default">
-    <div class="card-header">
-
-        <div class="float-left">
-            <div class="btn-group"></div>
-            <div class="btn-group"></div>
-        </div>
-
-        <div class="float-right">
-            <div class="btn-group"></div>
-        </div>
-    </div>
+    <div class="card-header"></div>
 
     <div class="card-body">
         <div class="row">
 
-            <!-- -------------------------------------------------------- -->
-            <!--   ESCANER DE CÓDIGO DE BARRAS CODE 39 - QUAGGAJS        -->
-            <!-- -------------------------------------------------------- -->
-            
             <div class="col-md-6">
+
                 <label for="codigo">Código escaneado</label>
-                <input type="text" id="codigo" class="form-control" placeholder="Esperando escaneo...">
+                <input type="text" id="codigo" class="form-control" placeholder="Esperando escaneo…">
 
                 <button id="btnStart" class="btn btn-primary mt-3 mb-3">
                     Iniciar lector
                 </button>
 
-                <div id="scanner"
-                    style="width:100%; max-width:450px; height:300px; border:1px solid #ccc; display:none;">
-                </div>
+                <button id="btnStop" class="btn btn-danger mt-3 mb-3" style="display:none;">
+                    Detener lector
+                </button>
+
+                <video id="preview"
+                    style="width:100%; max-width:450px; border:1px solid #ccc; display:none;"
+                    autoplay muted></video>
+
             </div>
 
         </div>
     </div>
 </div>
-<!-- /.card -->
 
 <?= $this->endSection() ?>
 
-<!-- Section JS -->
 <?= $this->section('js') ?>
 
-<!-- Librería QuaggaJS -->
-<script src="https://unpkg.com/quagga@0.12.1/dist/quagga.min.js"></script>
+<!-- ZXing estable vía CDN -->
+<script src="https://unpkg.com/@zxing/browser@0.1.5/umd/zxing-browser.min.js"></script>
 
 <script>
-document.getElementById('btnStart').addEventListener('click', function () {
+document.addEventListener("DOMContentLoaded", () => {
 
-    // Mostrar contenedor del lector
-    document.getElementById('scanner').style.display = "block";
+    console.log("ZXing cargado:", window['ZXingBrowser']);
 
-    Quagga.init({
-        inputStream: {
-            name: "Live",
-            type: "LiveStream",
-            target: document.querySelector('#scanner'),
-            constraints: {
-                facingMode: "environment",
-                width: { ideal: 1280 },
-                height: { ideal: 720 }
+    const ZX = window['ZXingBrowser']; // la UMD expone este objeto
+    const BrowserMultiFormatReader = ZX.BrowserMultiFormatReader;
+
+    const preview = document.getElementById('preview');
+    const inputCodigo = document.getElementById('codigo');
+    const btnStart = document.getElementById('btnStart');
+    const btnStop = document.getElementById('btnStop');
+
+    let reader = null;
+
+    btnStart.addEventListener('click', async () => {
+
+        btnStart.style.display = 'none';
+        btnStop.style.display = 'inline-block';
+        preview.style.display = 'block';
+
+        reader = new BrowserMultiFormatReader();
+
+        try {
+
+            // Obtener cámaras
+            const devices = await BrowserMultiFormatReader.listVideoInputDevices();
+
+            if (!devices || devices.length === 0) {
+                alert("No se detectan cámaras.");
+                detener();
+                return;
             }
-        },
-        decoder: {
-            readers: [{
-                format: "code_39_reader",
-                config: {
-                    tryCode39: true,
-                    code39: {
-                        enable: true,
-                        minConfidence: 0.5,
-                        checkCode: true
-                    }
+
+            // Preferir cámara trasera
+            let deviceId = devices[0].deviceId;
+            if (devices.length > 1) {
+                deviceId = devices[devices.length - 1].deviceId;
+            }
+
+            reader.decodeFromVideoDevice(deviceId, 'preview', (result, err) => {
+
+                if (result) {
+                    console.log("Detectado:", result.text);
+
+                    // Filtrar caracteres válidos de Code 39
+                    let clean = result.text.replace(/[^A-Za-z0-9\-\.\ \$\/\+\%]/g, "");
+                    inputCodigo.value = clean;
+
+                    detener(); // Detener tras primer lectura
                 }
-            }]
-        },
-        locate: true,
-        numOfWorkers: 2,
-        frequency: 10
-    },
-    function (err) {
-        if (err) {
-            console.error("Error iniciando Quagga:", err);
-            alert("No se pudo acceder a la cámara");
-            return;
-        }
 
-        Quagga.start();
-        console.log("Lector iniciado...");
+            });
+
+        } catch (err) {
+            console.error(err);
+            alert('No se pudo iniciar la cámara.');
+            detener();
+        }
     });
 
-    Quagga.onDetected(function (result) {
+    btnStop.addEventListener('click', detener);
 
-        // Filtro de confianza -> evita lecturas falsas (% $ * / etc.)
-        if (result.codeResult.confidence < 0.70) {
-            console.log("Lectura débil ignorada:", result.codeResult.code);
-            return;
-        }
+    function detener() {
+        try {
+            if (reader) reader.reset();
+        } catch {}
 
-        let code = result.codeResult.code;
-
-        // Limpiar cualquier carácter inválido (solo letras y números)
-        code = code.replace(/[^A-Za-z0-9]/g, "");
-
-        console.log("DETECTADO:", code);
-
-        // Poner en el input
-        document.getElementById('codigo').value = code;
-
-        // Detener escáner
-        Quagga.stop();
-        document.getElementById('scanner').style.display = "none";
-    });
+        preview.style.display = 'none';
+        btnStart.style.display = 'inline-block';
+        btnStop.style.display = 'none';
+    }
 });
 </script>
 
