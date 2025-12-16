@@ -166,78 +166,120 @@ class SaldosController extends BaseController {
     }
 
     public function getBarcodePDF($idProducto, $isMail = 0) {
-
-
-        $pdf = new \TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
-
+        // TCPDF
+        $pdf = new \TCPDF('L', 'mm', array(101, 50), true, 'UTF-8', false);
         $pdf->setPrintHeader(false);
         $pdf->setPrintFooter(false);
 
-// define barcode style
-        $style = array(
+        // Estilo Código de Barras
+        $style1D = array(
             'position' => '',
             'align' => 'C',
             'stretch' => false,
             'fitwidth' => true,
-            'cellfitalign' => '',
             'border' => true,
             'hpadding' => 'auto',
             'vpadding' => 'auto',
             'fgcolor' => array(0, 0, 0),
-            'bgcolor' => false, //array(255,255,255),
+            'bgcolor' => false,
             'text' => true,
             'font' => 'helvetica',
-            'fontsize' => 12,
+            'fontsize' => 10,
             'stretchtext' => 4
         );
 
+        // Estilo QR
+        $styleQR = array(
+            'border' => true,
+            'vpadding' => 'auto',
+            'hpadding' => 'auto',
+            'fgcolor' => array(0, 0, 0),
+            'bgcolor' => false
+        );
+
         helper('auth');
-
         $idUser = user()->id;
-        $titulos["empresas"] = $this->empresa->mdlEmpresasPorUsuario($idUser);
 
-        if (count($titulos["empresas"]) == "0") {
+        $empresas = $this->empresa->mdlEmpresasPorUsuario($idUser);
+        $empresasID = count($empresas) == 0 ? [0] : array_column($empresas, 'id');
 
-            $empresasID[0] = "0";
-        } else {
-
-            $empresasID = array_column($titulos["empresas"], "id");
-        }
-
-
+        // TODOS LOS PRODUCTOS
         if ($idProducto == 0) {
 
+            $productos = $this->saldos
+                    ->select("id,lote")
+                    ->whereIn("idEmpresa", $empresasID)
+                    ->findAll();
 
-            $productos = $this->saldos->select("id,lote")->whereIn("idEmpresa", $empresasID)->findAll();
+            foreach ($productos as $value) {
 
-            foreach ($productos as $key => $value) {
-
-
-
-                //$pdf->Cell(0, 0, 'BAR CODE', 0, 1);
-                if (strlen($value["lote"]) <= 3) {
-
+                if (strlen($value['lote']) <= 3) {
                     continue;
                 }
-                $pdf->AddPage('L', array(101, 50));
-                $pdf->write1DBarcode($value["lote"], 'C39', '', '', '', 18, 0.4, $style, 'N');
+
+                $pdf->AddPage();
+
+                // Código de barras
+                $pdf->write1DBarcode(
+                        $value['lote'],
+                        'C39',
+                        5, // X
+                        5, // Y
+                        70, // Ancho
+                        18, // Alto
+                        0.4,
+                        $style1D,
+                        'N'
+                );
+
+                // QR
+                $pdf->write2DBarcode(
+                        $value['lote'],
+                        'QRCODE,M',
+                        78, // X
+                        5, // Y
+                        18, // Ancho
+                        18, // Alto
+                        $styleQR,
+                        'N'
+                );
             }
+        } else {
 
-            ob_end_clean();
-            $this->response->setHeader("Content-Type", "application/pdf");
-            $pdf->Output('etiqueta.pdf', 'I');
+            // SOLO UN PRODUCTO
+            $producto = $this->saldos
+                    ->select("lote")
+                    ->whereIn("idEmpresa", $empresasID)
+                    ->where("id", $idProducto)
+                    ->first();
 
-            return;
+            $pdf->AddPage();
+
+            // Código de barras
+            $pdf->write1DBarcode(
+                    $producto['lote'],
+                    'C39',
+                    5,
+                    5,
+                    70,
+                    18,
+                    0.4,
+                    $style1D,
+                    'N'
+            );
+
+            // QR
+            $pdf->write2DBarcode(
+                    $producto['lote'],
+                    'QRCODE,M',
+                    78,
+                    5,
+                    18,
+                    18,
+                    $styleQR,
+                    'N'
+            );
         }
-
-
-        $productos = $this->saldos->select("lote")
-                        ->whereIn("idEmpresa", $empresasID)
-                        ->where("id", $idProducto)->findAll();
-
-        $pdf->AddPage('L', array(101, 50));
-
-        $pdf->write1DBarcode($productos[0]["lote"], 'C39', '', '', '', 18, 0.4, $style, 'N');
 
         ob_end_clean();
         $this->response->setHeader("Content-Type", "application/pdf");
