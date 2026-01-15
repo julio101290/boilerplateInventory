@@ -61,7 +61,14 @@ $routes->group('admin', function ($routes) {
         'namespace' => 'julio101290\boilerplateinventory\Controllers',
         'except' => 'show'
     ]);
-
+    $routes->post('saldos/getStoragesAjax'
+            , 'SaldosController::getStoragesAjax'
+            , ['namespace' => 'julio101290\boilerplateinventory\Controllers']
+    );
+    $routes->post('saldos/getProductsAjax'
+            , 'SaldosController::getAllProducts'
+            , ['namespace' => 'julio101290\boilerplateinventory\Controllers']
+    );
     $routes->get('saldos/barcode/(:any)'
             , 'SaldosController::getBarcodePDF/$1'
             , ['namespace' => 'julio101290\boilerplateinventory\Controllers']
@@ -76,15 +83,17 @@ $routes->group('admin', function ($routes) {
             , 'SaldosController::getProductsFieldsExtra'
             , ['namespace' => 'julio101290\boilerplateinventory\Controllers']
     );
-    
-    
+    $routes->get('saldos/(:any)/(:any)/(:any)'
+            , 'SaldosController::getSaldosFilters/$1/$2/$3'
+            , ['namespace' => 'julio101290\boilerplateinventory\Controllers']
+    );
+
     /*
      * Info inventpry for get producto with qrcode image
      */
-    
+
     $routes->get('infoinventario'
             , 'SaldosController::getGetInfoProducts'
             , ['namespace' => 'julio101290\boilerplateinventory\Controllers']
     );
-    
 });

@@ -100,7 +100,7 @@
                 if (respuesta && typeof respuesta === "object") {
                     if (respuesta.status === "ok") {
                         Toast.fire({icon: "success", title: respuesta.message || "Campos extra guardados correctamente"});
-                        $("#modalExtraFields").modal("hide");
+                        $("#modalAddExtraFields").modal("hide");
                     } else {
                         Toast.fire({icon: "error", title: respuesta.message || "Error al guardar los campos extra"});
                     }
