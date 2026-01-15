@@ -10,6 +10,8 @@ use julio101290\boilerplatecompanies\Models\EmpresasModel;
 use julio101290\boilerplateinventory\Models\DataExtraFieldsBalanceModel;
 use julio101290\boilerplateproducts\Models\ProductsModel;
 use julio101290\boilerplateproducts\Models\FieldsExtraProductosModel;
+use julio101290\boilerplateproducts\Models\CategoriasModel;
+use julio101290\boilerplatestorages\Models\StoragesModel;
 
 class SaldosController extends BaseController {
 
@@ -21,6 +23,7 @@ class SaldosController extends BaseController {
     protected $fieldsExtra;
     protected $fieldsExtraValues;
     protected $products;
+    protected $storages;
 
     public function __construct() {
         $this->saldos = new SaldosModel();
@@ -29,6 +32,7 @@ class SaldosController extends BaseController {
         $this->fieldsExtraValues = new DataExtraFieldsBalanceModel();
         $this->fieldsExtra = new FieldsExtraProductosModel();
         $this->products = new ProductsModel();
+        $this->storages = new StoragesModel();
         helper(['menu', 'utilerias']);
     }
 
@@ -49,7 +53,15 @@ class SaldosController extends BaseController {
             $orderColumnIndex = (int) $request->getGet('order')[0]['column'] ?? 0;
             $orderDir = $request->getGet('order')[0]['dir'] ?? 'asc';
 
-            $fields = $this->saldos->allowedFields;
+            //$fields = $this->saldos->allowedFields;
+            $fields = [
+                'id' => 'a.id',
+                'nombreAlmacen' => 'c.name',
+                'lote' => 'a.lote',
+                'codigoProducto' => 'a.codigoProducto',
+                'descripcion' => 'a.descripcion',
+                'fullname' => 'e.fullname'
+            ];
             $orderField = $fields[$orderColumnIndex] ?? 'id';
 
             $builder = $this->saldos->mdlGetSaldos($empresasID);
@@ -60,10 +72,78 @@ class SaldosController extends BaseController {
             if (!empty($searchValue)) {
                 $builder->groupStart();
                 foreach ($fields as $field) {
-                    $builder->orLike("a." . $field, $searchValue);
+                    $builder->orLike($field, $searchValue);
                 }
                 $builder->groupEnd();
             }
+
+
+            $filteredBuilder = clone $builder;
+            $recordsFiltered = $filteredBuilder->countAllResults(false);
+
+            $data = $builder->orderBy("a." . $orderField, $orderDir)
+                    ->get($length, $start)
+                    ->getResultArray();
+
+            return $this->response->setJSON([
+                        'draw' => $draw,
+                        'recordsTotal' => $recordsTotal,
+                        'recordsFiltered' => $recordsFiltered,
+                        'data' => $data,
+            ]);
+        }
+
+        $titulos["title"] = "Info Productos";
+        $titulos["subtitle"] = "Extrae la información de los productos por el codigo de barras";
+        return view('julio101290\boilerplateinventory\Views\saldos', $titulos);
+    }
+
+    public function getSaldosFilters($idEmpresa, $idAlmacen, $idProducto) {
+        helper('auth');
+
+        $idUser = user()->id;
+        if ($idEmpresa == "") {
+            $titulos["empresas"] = $this->empresa->mdlEmpresasPorUsuario($idUser);
+            $empresasID = count($titulos["empresas"]) === 0 ? [0] : array_column($titulos["empresas"], "id");
+        } else {
+            $empresasID = $idEmpresa;
+        }
+
+
+        if ($this->request->isAJAX()) {
+            $request = service('request');
+
+            $draw = (int) $request->getGet('draw');
+            $start = (int) $request->getGet('start');
+            $length = (int) $request->getGet('length');
+            $searchValue = $request->getGet('search')['value'] ?? '';
+            $orderColumnIndex = (int) $request->getGet('order')[0]['column'] ?? 0;
+            $orderDir = $request->getGet('order')[0]['dir'] ?? 'asc';
+
+            //$fields = $this->saldos->allowedFields;
+            $fields = [
+                'id' => 'a.id',
+                'nombreAlmacen' => 'c.name',
+                'lote' => 'a.lote',
+                'codigoProducto' => 'a.codigoProducto',
+                'descripcion' => 'a.descripcion',
+                'fullname' => 'e.fullname'
+            ];
+            $orderField = $fields[$orderColumnIndex] ?? 'id';
+
+            $builder = $this->saldos->mdlGetSaldosFilters($empresasID, $idAlmacen, $idProducto);
+
+            $total = clone $builder;
+            $recordsTotal = $total->countAllResults(false);
+
+            if (!empty($searchValue)) {
+                $builder->groupStart();
+                foreach ($fields as $field) {
+                    $builder->orLike($field, $searchValue);
+                }
+                $builder->groupEnd();
+            }
+
 
             $filteredBuilder = clone $builder;
             $recordsFiltered = $filteredBuilder->countAllResults(false);
@@ -459,5 +539,121 @@ class SaldosController extends BaseController {
                         'message' => 'Error al guardar campos extra: ' . $ex->getMessage(),
             ]);
         }
+    }
+
+    public function getAllProducts() {
+
+
+        helper('auth');
+        $empresa = "";
+        $userName = user()->username ?? 'system';
+        $idUser = user()->id ?? 0;
+        $titulos["empresas"] = $this->empresa->mdlEmpresasPorUsuario($idUser);
+
+        $request = service('request');
+        $postData = $request->getPost();
+
+        if (count($titulos["empresas"]) == "0") {
+
+            $empresasID[0] = "0";
+        } else {
+
+            $empresasID = array_column($titulos["empresas"], "id");
+        }
+
+        $idEmpresaq = $postData['idEmpresa'];
+        if ($this->request->isAJAX()) {
+
+
+            $request = $this->request;
+            $draw = (int) $request->getGet('draw');
+            $start = (int) $request->getGet('start');
+            $length = (int) $request->getGet('length');
+            if (!isset($postData['searchTerm'])) {
+
+                $postData['searchTerm'] = "";
+            }
+            $empresa = (int) $empresa;
+
+            // Obtiene paginación manual desde el modelo
+            $resultados = $this->saldos
+                    ->mdlGetProductoEmpresa($empresasID, $empresa, $postData['searchTerm']);
+
+            $data = array();
+
+            $data[] = [
+                'id' => '0',
+                'text' => 'Seleccionar producto'
+            ];
+            foreach ($resultados as $value) {
+
+                $data[] = array(
+                    "id" => $value['id'],
+                    "text" => $value['id'] . ' ' . $value['description'],
+                );
+            }
+
+            $response['data'] = $data;
+
+            return $this->response->setJSON($response);
+        }
+    }
+
+    public function getStoragesAjax() {
+
+        $request = service('request');
+        $postData = $request->getPost();
+
+        $response = array();
+
+        // Read new token and assign in $response['token']
+        $response['token'] = csrf_hash();
+
+        helper('auth');
+        $userName = user()->username;
+        $idUser = user()->id;
+        $idEmpresa = $postData["idEmpresa"];
+
+        if (empty($idEmpresa)) {
+            // Si no mandan empresa, puedes decidir:
+            // 1) mandar un array vacío (fallará whereIn)
+            // 2) o mandar todas (NO recomendado aquí)
+            $empresasID = [0]; // valor imposible para evitar error SQL
+        } else {
+            $empresasID = is_array($idEmpresa) ? $idEmpresa : [$idEmpresa];
+        }
+
+
+//        $empresasID[0] = $postData["idEmpresa"];
+//        $empresasID = array_column($empresasID[0], "id");
+        if (!isset($postData['searchTerm'])) {
+            $listStorages = $this->storages->mdlStorages($empresasID)->get()->getResultArray();
+        } else {
+            $searchTerm = $postData["searchTerm"];
+            $listStorages = $this->storages
+                    ->where("idEmpresa", $empresasID)
+                    ->like('name', $searchTerm)
+                    ->orLike('id', $searchTerm)
+                    ->orLike('code', $searchTerm)
+                    ->get()->getResultArray();
+        }
+
+
+
+        $data = array();
+        $data[] = [
+            'id' => '0',
+            'text' => 'Seleccionar Almacen'
+        ];
+        foreach ($listStorages as $storage) {
+            $data[] = array(
+                "id" => $storage['id'],
+                "text" => $storage['code'] . ' ' . $storage['name'],
+            );
+        }
+
+        $response['data'] = $data;
+
+        return $this->response->setJSON($response);
     }
 }

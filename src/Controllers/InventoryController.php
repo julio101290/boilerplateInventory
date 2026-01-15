@@ -506,7 +506,8 @@ class InventoryController extends BaseController {
 
         return view('julio101290\boilerplateinventory\Views\newInventory', $titulos);
     }
-
+    
+    
     /*
      * Save or Update
      */

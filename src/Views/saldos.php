@@ -9,10 +9,55 @@
 
 <div class="card card-default">
     <div class="card-header">
+        <div class="float-left">
+
+            <div class="btn-group">
+
+                <div class="form-group">
+                    <label for="idEmpresaList">Empresa </label>
+                    <select class="form-control idEmpresaList" name="idEmpresaList" id="idEmpresaList" style="width:100%;">
+                        <option value="0">Seleccione empresa</option>
+                        <?php foreach ($empresas as $value): ?>
+                            <option value="<?= $value['id'] ?>">
+                                <?= $value['id'] ?> - <?= $value['nombre'] ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+            </div>
+            <div class="btn-group">
+                <div class="form-group">
+                    <label for="idAlmacen">Almacen</label>
+                    <select name="idAlmacen" id="idAlmacen" style="width: 100%;" class="form-control idAlmacen form-controlProducts">
+                        <option value="0">Seleccione Almacen</option>
+
+                    </select>
+                </div> 
+            </div>
+            <div class="btn-group">
+                <div class="form-group">
+                    <label for="idProducto">Productos</label>
+                    <select name="idProducto" id="idProducto" style="width: 100%;" class="form-control idProducto form-controlProducts">
+                        <option value="0" selected>
+                            Seleccione el producto
+                        </option>
+
+                    </select>
+                </div> 
+            </div>
+            <div class="btn-group">
+                <button type="button" class="btn btn-primary btnAceptar" id="btnAceptar" name="btnAceptar"><i class="fa fa-check"></i></button>
+            </div>
+
+
+        </div>
+
         <div class="float-right">
 
 
             <div class="btn-group">
+
                 <button class="btn btn-primary btnPrintCodes" data-toggle="modal">
                     <i class="fa fa-barcode"></i> Imprimir todos los códigos de barras
                 </button>
@@ -53,12 +98,32 @@
 <?= $this->endSection() ?>
 <?= $this->section('js') ?>
 <script>
+    $(".btnAceptar").on("click", function () {
+        //RESETEAR EL COLAPSO DE LA TABLA
+        collapsedGroups = {};
+        ttop = '';
+        fncAceptar();
+
+    })
+    function fncAceptar() {
+        var idEmpresa = $('#idEmpresaList').val();
+        var idAlmacen = $('.idAlmacen').val();
+        var idProducto = $('.idProducto').val();
+        console.log("idProducto", idProducto);
+
+
+        tableSaldos.ajax.url(`<?= base_url('admin/saldos') ?>/` + idEmpresa + '/' + idAlmacen + '/' + idProducto).load();
+    }
     var tableSaldos = $('#tableSaldos').DataTable({
         processing: true,
         serverSide: true,
         responsive: true,
         autoWidth: false,
         order: [[1, 'asc']],
+        pageLength: 50, // 👈 registros por defecto
+        lengthMenu: [10, 25, 50, 100], // 👈 opciones del selector
+        searching: true, // 👈 AQUÍ se activa el buscador
+
         ajax: {
             url: '<?= base_url('admin/saldos') ?>',
             method: 'GET',
@@ -179,86 +244,133 @@
         });
     });
 
+    $(".idAlmacen").select2({
+        ajax: {
+            url: "<?= base_url('admin/saldos/getStoragesAjax') ?>",
+            type: "post",
+            dataType: 'json',
+            delay: 250,
+            data: function (params) {
+                // CSRF Hash
+                var csrfName = $('.txt_csrfname').attr('name'); // CSRF Token name
+                var csrfHash = $('.txt_csrfname').val(); // CSRF hash
+                var idEmpresa = $('.idEmpresaList').val(); // CSRF hash
 
-    $(".tableSaldos").on("click", ".btn-barcode", function () {
+                return {
+                    searchTerm: params.term, // search term
+                    [csrfName]: csrfHash, // CSRF Token
+                    idEmpresa: idEmpresa // search term
+                };
+            },
+            processResults: function (response) {
 
-        var idProduct = $(this).attr("data-id");
+                // Update CSRF Token
+                $('.txt_csrfname').val(response.token);
 
-        window.open("<?= base_url('admin/saldos/barcode/') ?>" + "/" + idProduct, "_blank");
-
-
+                return {
+                    results: response.data
+                };
+            },
+            cache: true
+        }
     });
 
+    $("#idEmpresaList").change(function () {
+        $('.idAlmacen').val("0").trigger('change');
+    })
+    
+    $(".idProducto").select2({
+    ajax: {
+    url: "<?= base_url('admin/saldos/getProductsAjax') ?>",
+            type: "post",
+            dataType: 'json',
+            delay: 250,
+            data: function (params) {
+            // CSRF Hash
+            var csrfName = $('.txt_csrfname').attr('name'); // CSRF Token name
+                    var csrfHash = $('.txt_csrfname').val(); // CSRF hash
+                    var idEmpresa = $('.idEmpresaList').val(); // CSRF hash
 
-    $(".btnPrintCodes").on("click", function () {
+                    return {
+                    searchTerm: params.term, // search term
+                    [csrfName]: csrfHash, // CSRF Token
+                            idEmpresa: idEmpresa // search term
+                    };
+            },
+            processResults: function (response) {
 
-        window.open("<?= base_url('admin/saldos/barcode/') ?>" + "/0", "_blank");
-
+            // Update CSRF Token
+            $('.txt_csrfname').val(response.token);
+                    return {
+                    results: response.data
+                    };
+            },
+            cache: true
+    }
     });
+            $(".tableSaldos").on("click", ".btn-barcode", function () {
 
+    var idProduct = $(this).attr("data-id");
+            window.open("<?= base_url('admin/saldos/barcode/') ?>" + "/" + idProduct, "_blank");
+    });
+            $(".btnPrintCodes").on("click", function () {
 
-    $(".tableSaldos").on("click", ".btnEditExtra", function () {
+    window.open("<?= base_url('admin/saldos/barcode/') ?>" + "/0", "_blank");
+    });
+            $(".tableSaldos").on("click", ".btnEditExtra", function () {
 
-        var idBalance = $(this).attr("idsaldos");
-
-        console.log("idBalance:", idBalance);
-
-        var datos = new FormData();
-        datos.append("idBalance", idBalance);
-
-        $.ajax({
+    var idBalance = $(this).attr("idsaldos");
+            console.log("idBalance:", idBalance);
+            var datos = new FormData();
+            datos.append("idBalance", idBalance);
+            $.ajax({
 
             url: "<?= base_url('admin/saldos/getProductsFieldsExtra') ?>",
-            method: "POST",
-            data: datos,
-            cache: false,
-            contentType: false,
-            processData: false,
-            success: function (respuesta) {
+                    method: "POST",
+                    data: datos,
+                    cache: false,
+                    contentType: false,
+                    processData: false,
+                    success: function (respuesta) {
 
-                $(".extraFields").html(respuesta);
+                    $(".extraFields").html(respuesta);
+                    }
 
-            }
-
-        })
+            })
 
     });
-
-
-
-    $(".tableSaldos").on("click", ".btn-delete", function () {
-        var idSaldos = $(this).attr("data-id");
-        Swal.fire({
+            $(".tableSaldos").on("click", ".btn-delete", function () {
+    var idSaldos = $(this).attr("data-id");
+            Swal.fire({
             title: '<?= lang('boilerplate.global.sweet.title') ?>',
-            text: "<?= lang('boilerplate.global.sweet.text') ?>",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: '<?= lang('boilerplate.global.sweet.confirm_delete') ?>'
-        }).then((result) => {
-            if (result.value) {
-                $.ajax({
-                    url: `<?= base_url('admin/saldos') ?>/` + idSaldos,
-                    method: 'DELETE',
-                }).done((data, textStatus, jqXHR) => {
-                    Toast.fire({
-                        icon: 'success',
-                        title: jqXHR.statusText,
-                    });
-                    tableSaldos.ajax.reload();
-                }).fail((error) => {
-                    Toast.fire({
-                        icon: 'error',
-                        title: error.responseJSON.messages.error,
-                    });
-                });
-            }
-        });
+                    text: "<?= lang('boilerplate.global.sweet.text') ?>",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: '<?= lang('boilerplate.global.sweet.confirm_delete') ?>'
+            }).then((result) => {
+    if (result.value) {
+    $.ajax({
+    url: `<?= base_url('admin/saldos') ?>/` + idSaldos,
+            method: 'DELETE',
+    }).done((data, textStatus, jqXHR) => {
+    Toast.fire({
+    icon: 'success',
+            title: jqXHR.statusText,
     });
-
-    $(function () {
-        $("#modalAddSaldos").draggable();
+            tableSaldos.ajax.reload();
+    }).fail((error) => {
+    Toast.fire({
+    icon: 'error',
+            title: error.responseJSON.messages.error,
     });
+    });
+    }
+    });
+    });
+            $(function () {
+            $("#modalAddSaldos").draggable();
+            });
 </script>
 <?= $this->endSection() ?>
