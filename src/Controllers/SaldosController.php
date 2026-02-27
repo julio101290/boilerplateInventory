@@ -191,6 +191,24 @@ class SaldosController extends BaseController {
         $titulos["subtitle"] = lang('saldos.subtitle');
         return view('julio101290\boilerplateinventory\Views\infoInventario', $titulos);
     }
+    
+    public function getGetInfoProductsCode() {
+
+        helper('auth');
+        $idUser = user()->id;
+        $empresa = "";
+
+        $idBalance = $this->request->getPost("codigo");
+        $postData['searchTerm'] = "";
+        $titulos["empresas"] = $this->empresa->mdlEmpresasPorUsuario($idUser);
+        $empresasID = count($titulos["empresas"]) === 0 ? [0] : array_column($titulos["empresas"], "id");
+        $empresa = (int) $empresa;
+
+//        $result = $this->saldos->where("lote", $idBalance)->asObject()->first();
+        $result = $this->saldos->mdlGetProducto($idBalance);
+        
+        return $this->response->setJSON($result[0]);
+    }
 
     public function save() {
         helper('auth');
@@ -631,11 +649,11 @@ class SaldosController extends BaseController {
         } else {
             $searchTerm = $postData["searchTerm"];
             $listStorages = $this->storages
-                    ->where("idEmpresa", $empresasID)
-                    ->like('name', $searchTerm)
-                    ->orLike('id', $searchTerm)
-                    ->orLike('code', $searchTerm)
-                    ->get()->getResultArray();
+                            ->where("idEmpresa", $empresasID)
+                            ->like('name', $searchTerm)
+                            ->orLike('id', $searchTerm)
+                            ->orLike('code', $searchTerm)
+                            ->get()->getResultArray();
         }
 
 

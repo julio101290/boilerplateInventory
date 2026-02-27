@@ -172,4 +172,27 @@ class SaldosModel extends Model {
 
         return $builder->get()->getResultArray();
     }
+    public function mdlGetProducto($code) {
+
+        $builder = $this->db->table('saldos a')
+                ->select(
+                        'a.idAlmacen,
+            a.lote,
+            a.idProducto,
+            a.codigoProducto,
+            a.descripcion,
+            b.id,
+            b.name,
+            d.fullname,
+            e.date,
+            E.generalObservations'
+                )
+               ->join('storages b', 'a.idAlmacen = b.id')
+               ->join('productsemployes c', 'a.id = c.idProduct')
+               ->join('employes d', 'c.idEmploye = d.id')
+               ->join('ordermaintenance e', 'a.id = e.idProduct')
+               ->where('a.lote', $code);
+
+        return $builder->get()->getResultArray();
+    }
 }

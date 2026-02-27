@@ -96,4 +96,9 @@ $routes->group('admin', function ($routes) {
             , 'SaldosController::getGetInfoProducts'
             , ['namespace' => 'julio101290\boilerplateinventory\Controllers']
     );
+    $routes->post('generica'
+            , 'SaldosController::getGetInfoProductsCode'
+            , ['namespace' => 'julio101290\boilerplateinventory\Controllers']
+    );
+    
 });
