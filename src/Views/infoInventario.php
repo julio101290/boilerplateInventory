@@ -82,10 +82,24 @@
             <input class="imputClass" id="usuario" readonly value="">
         </div>
         <br>
-         <div class="col-12 col-md-12">
-            <label class="small text-muted mb-0">MANTENIMIENTOS</label>
-            <input class="imputClass" id="mantenimiento" readonly value="">
+        <div class="col-12 col-md-12">
+            <label class="small text-muted mb-1">MANTENIMIENTOS</label>
+            <textarea 
+                class="form-control-plaintext fw-semibold"
+                id="mantenimiento"
+                readonly
+                rows="1"
+                style="
+                    resize: none;
+                    overflow: hidden;
+                    white-space: pre-wrap;
+                    font-size: 0.80rem;
+                    color: #567594;
+                    font-family: 'Poppins', sans-serif;
+                ">
+            </textarea>
         </div>
+        <br>
     </div>
 
 </div>
@@ -160,37 +174,52 @@
         $('#btnStop').addClass('d-none');
         $('#btnStart').removeClass('d-none');
     }
-
+function autoGrow(element) {
+    element.style.height = "auto";
+    element.style.height = element.scrollHeight + "px";
+}
 // =============================================================
 // AJAX CI4
 // =============================================================
-    function enviarCodigo(code) {
-        $.post(
-                "<?= base_url('admin/generica') ?>",
-                {codigo: code},
-                function(res) {
-                    if (!res || Object.keys(res).length === 0) {
-                    $('#detalleProducto').addClass('d-none');
-                    alert('Producto no encontrado');
-                    return; // ⛔ corta la ejecución
-                    }
-                    
-                    console.log(res);
+ function enviarCodigo(code) {
+    $.post(
+        "<?= base_url('admin/generica') ?>",
+        {codigo: code},
+        function(res) {
 
-                    // Asignar al input
-                    $('#idProducto').val(res.idProducto);
-                    $('#description').val(res.descripcion);
-                    $('#lote').val(res.lote);
-                    $('#codigoProducto').val(res.codigoProducto);
-                    $('#idAlmacen').val(res.name);
-                    $('#usuario').val(res.fullname);
-                    $('#mantenimiento').val(res.date + ' - ' + res.generalObservations);
-                    $('#detalleProducto').removeClass('d-none').hide().fadeIn(200);
-                },
-                'json'
+            if (!res || Object.keys(res).length === 0) {
+                $('#detalleProducto').addClass('d-none');
+                alert('Producto no encontrado');
+                return;
+            }
 
-        );
-    }
+            console.log(res);
+
+            $('#idProducto').val(res.idProducto);
+            $('#description').val(res.descripcion);
+            $('#lote').val(res.lote);
+            $('#codigoProducto').val(res.codigoProducto);
+            $('#idAlmacen').val(res.name);
+            $('#usuario').val(res.fullname);
+
+            // 👇 AQUÍ LO IMPORTANTE
+            let historial = res.maintenanceHistory || '';
+
+            historial = historial.replace(/\s*\|\|\s*/g, '\n\n');
+            console.log("dd", historial);
+            $('#mantenimiento').val(historial);
+
+            $('#detalleProducto')
+                .removeClass('d-none')
+                .hide()
+                .fadeIn(200, function () {
+                    // 👇 Ahora sí ya es visible
+                    autoGrow(document.getElementById("mantenimiento"));
+                });
+        },
+        'json'
+    );
+}
 
 // =============================================================
 // ENTER MANUAL

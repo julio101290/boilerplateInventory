@@ -205,8 +205,13 @@ class SaldosController extends BaseController {
         $empresa = (int) $empresa;
 
 //        $result = $this->saldos->where("lote", $idBalance)->asObject()->first();
+
         $result = $this->saldos->mdlGetProducto($idBalance);
         
+        if (empty($result)) {
+            return $this->response->setJSON([]);
+        }
+
         return $this->response->setJSON($result[0]);
     }
 

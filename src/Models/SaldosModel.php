@@ -175,23 +175,31 @@ class SaldosModel extends Model {
     public function mdlGetProducto($code) {
 
         $builder = $this->db->table('saldos a')
-                ->select(
-                        'a.idAlmacen,
-            a.lote,
-            a.idProducto,
-            a.codigoProducto,
-            a.descripcion,
-            b.id,
-            b.name,
-            d.fullname,
-            e.date,
-            E.generalObservations'
-                )
-               ->join('storages b', 'a.idAlmacen = b.id')
-               ->join('productsemployes c', 'a.id = c.idProduct')
-               ->join('employes d', 'c.idEmploye = d.id')
-               ->join('ordermaintenance e', 'a.id = e.idProduct')
-               ->where('a.lote', $code);
+               ->select("
+                   a.idAlmacen,
+                   a.lote,
+                   a.idProducto,
+                   a.codigoProducto,
+                   a.descripcion,
+                   b.id as idStorage,
+                   b.name,
+                   d.fullname,
+                    GROUP_CONCAT(
+                        DISTINCT CONCAT(
+                            DATE_FORMAT(e.date,'%Y-%m-%d'),
+                            ' - ',
+                            IFNULL(e.generalObservations,'')
+                        )
+                        ORDER BY e.date DESC
+                        SEPARATOR ' || '
+                    ) as maintenanceHistory
+                ", false)
+               ->join('storages b', 'a.idAlmacen = b.id', 'left')
+               ->join('productsemployes c', 'a.id = c.idProduct', 'left')
+               ->join('employes d', 'c.idEmploye = d.id', 'left')
+               ->join('ordermaintenance e', 'a.id = e.idProduct', 'left')
+               ->where('a.lote', $code)
+               ->groupBy('a.id');
 
         return $builder->get()->getResultArray();
     }
