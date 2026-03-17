@@ -506,8 +506,7 @@ class InventoryController extends BaseController {
 
         return view('julio101290\boilerplateinventory\Views\newInventory', $titulos);
     }
-    
-    
+
     /*
      * Save or Update
      */
@@ -1122,6 +1121,16 @@ class InventoryController extends BaseController {
 
         $keyCategory = $categoryData["clave"];
 
+        // Validar que tenga subcategoría
+        if (empty($productData["idSubCategoria"])) {
+
+            return $this->response->setJSON([
+                        "error" => true,
+                        "message" => "El producto no tiene subcategoría asignada"
+            ]);
+        }
+
+
         $subCategoryData = $this->subCategory->select("*")
                 ->where("id", $productData["idSubCategoria"])
                 ->first();
@@ -1260,8 +1269,6 @@ class InventoryController extends BaseController {
                 $datosNuevosSaldo = $this->saldos
                         ->where($datosSaldo)
                         ->first();
-
-             
 
                 $nuevoSaldo["cantidad"] = $datosNuevosSaldo["cantidad"] - $value["cant"];
 

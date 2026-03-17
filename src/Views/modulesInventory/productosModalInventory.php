@@ -120,22 +120,37 @@
      * Evento al hacer click al boton btnAgregarDiagnostico
      */
 
-    $("#table-products").on("click", ".btnAddProduct", function () {
+    // ---------------------------------------------------
+    // Contador en memoria por "loteBase" para evitar duplicados
+    // ---------------------------------------------------
+    // Variable global dentro de este scope para controlar consecutivos
+    var lotesContador = {};
 
-        var idProduct = $(this).attr("data-id");
+    // ---------------------------------------------------
+    // Evento: click en botones .btnAddProduct dentro de #table-products
+    // ---------------------------------------------------
+    $("#table-products").on("click", ".btnAddProduct", function (e) {
+        e.preventDefault();
+
+        var $btn = $(this);
+        // si quieres bloquear el botón para prevenir doble click rápido, descomenta:
+        // $btn.prop("disabled", true);
+
+        var idProduct = $btn.attr("data-id");
         var almacen = $(".idStorage").val();
-        var calculatelot = $(this).attr("calculatelot");
-        var lote = $(this).attr("lote");
-        var description = $(this).attr("description");
-        var codeProduct = $(this).attr("code");
-        var salePrice = $(this).attr("price");
-        var porcentTax = $(this).attr("porcentTax");
-        var porcentIVARetenido = $(this).attr("porcentIVARetenido");
-        var porcentISRRetenido = $(this).attr("porcentISRRetenido");
-        var claveUnidadSAT = $(this).attr("unidadSAT");
-        var unidad = $(this).attr("unidad");
-        var claveProductoSAT = $(this).attr("claveProductoSAT");
+        var calculatelot = $btn.attr("calculatelot");
+        var lote = $btn.attr("lote");
+        var description = $btn.attr("description");
+        var codeProduct = $btn.attr("code");
+        var salePrice = $btn.attr("price");
+        var porcentTax = $btn.attr("porcentTax");
+        var porcentIVARetenido = $btn.attr("porcentIVARetenido");
+        var porcentISRRetenido = $btn.attr("porcentISRRetenido");
+        var claveUnidadSAT = $btn.attr("unidadSAT");
+        var unidad = $btn.attr("unidad");
+        var claveProductoSAT = $btn.attr("claveProductoSAT");
 
+        // Preparar datos para el AJAX
         var datos = new FormData();
         datos.append("idAlmacen", almacen);
         datos.append("idProducto", idProduct);
@@ -148,57 +163,104 @@
             contentType: false,
             processData: false,
             dataType: "json",
+
             success: function (respuesta) {
 
-                // --- 1) Lote base desde backend ---
-                var loteCalculado = respuesta.lot; // Ej: LMPLMLAPTOP000001
+                // --- 1) Lote base desde backend (fallback si no viene) ---
+                var loteCalculado = (respuesta && respuesta.lot) ? respuesta.lot : (lote || "UNKNOWN000001");
 
-                // Prefijo base sin el consecutivo
-                var loteBase = loteCalculado.slice(0, -6);  // LMPLMLAPTOP
-
-                // --- 2) Buscar lotes ya agregados en el formulario ---
-                var lotesActuales = [];
-                $(".rowProducts .lote").each(function () {
-                    var val = $(this).val();
-                    if (val.startsWith(loteBase)) {
-                        lotesActuales.push(val);
-                    }
-                });
-
-                // --- 3) Si no hay ninguno, usamos directamente el del backend ---
-                var loteFinal = loteCalculado;
-
-                if (lotesActuales.length > 0) {
-
-                    // Obtener el consecutivo mayor
-                    let max = 0;
-                    lotesActuales.forEach(function (lt) {
-                        let num = parseInt(lt.slice(-6));
-                        if (num > max)
-                            max = num;
-                    });
-
-                    let nuevo = max + 1;
-                    let newConsecutivo = String(nuevo).padStart(6, "0");
-
-                    loteFinal = loteBase + newConsecutivo;
+                if (!loteCalculado) {
+                    console.error("No se pudo determinar el lote calculado");
+                    return;
                 }
 
-                // --- 4) Ahora sí, agregar el renglon ---
-                agregarRenglon(idProduct, codeProduct, loteFinal, description, salePrice,
-                        porcentTax, porcentIVARetenido, porcentISRRetenido,
-                        claveUnidadSAT, unidad, claveProductoSAT);
+                // 🔥 VALIDACIÓN NUEVA
+                if (respuesta.error) {
+
+                    Toast.fire({
+                        icon: 'error',
+                        title: respuesta.message
+                    });
+                    return;
+                }
+
+
+                // Asumimos que los últimos 6 caracteres son el consecutivo numérico
+                var loteBase = loteCalculado.slice(0, -6);  // ej: "LMPLMLAPTOP"
+                var consecutivoBackend = parseInt(loteCalculado.slice(-6), 10);
+                if (isNaN(consecutivoBackend))
+                    consecutivoBackend = 0;
+
+                // --- 2) Decidir loteFinal usando lotesContador para evitar race conditions ---
+                var loteFinal;
+
+                if (!lotesContador.hasOwnProperty(loteBase)) {
+                    // Primera vez que vemos este loteBase: inicializamos con el consecutivo del backend
+                    lotesContador[loteBase] = consecutivoBackend;
+                    loteFinal = loteCalculado;
+                } else {
+                    // Ya había un contador local
+                    if (consecutivoBackend > lotesContador[loteBase]) {
+                        // Backend avanzó por fuera de esta sesión: sincronizamos al backend
+                        lotesContador[loteBase] = consecutivoBackend;
+                        loteFinal = loteCalculado;
+                    } else {
+                        // Usamos el siguiente consecutivo en memoria
+                        lotesContador[loteBase] = lotesContador[loteBase] + 1;
+                        var nuevo = String(lotesContador[loteBase]).padStart(6, "0");
+                        loteFinal = loteBase + nuevo;
+                    }
+                }
+
+                // --- 3) Llamamos a la función que agrega el renglón ---
+                agregarRenglon(
+                        idProduct,
+                        codeProduct,
+                        loteFinal,
+                        description,
+                        salePrice,
+                        porcentTax,
+                        porcentIVARetenido,
+                        porcentISRRetenido,
+                        claveUnidadSAT,
+                        unidad,
+                        claveProductoSAT
+                        );
+            },
+
+            error: function (xhr, status, err) {
+                console.error("Error en getLastLot:", status, err);
+                alert("No se pudo obtener el lote desde el servidor. Intenta de nuevo.");
+            },
+
+            complete: function () {
+                // si bloqueaste el botón, re-habilítalo aquí:
+                // $btn.prop("disabled", false);
             }
         });
 
+    }); // fin evento btnAddProduct
+
+    // ---------------------------------------------------
+    // Handler para quitar renglón
+    // ---------------------------------------------------
+    $(document).on("click", ".quitProduct", function () {
+        $(this).closest(".nuevoProduct").remove();
+        // NOTA: no decrementamos lotesContador para evitar reuso accidental de consecutivos
     });
 
-// ----------------------------------------------
-//  FUNCIÓN QUE CONSTRUYE EL RENGLÓN
-// ----------------------------------------------
+    // ---------------------------------------------------
+    // FUNCIÓN QUE CONSTRUYE EL RENGLÓN
+    // ---------------------------------------------------
     function agregarRenglon(idProduct, codeProduct, lote, description, salePrice,
             porcentTax, porcentIVARetenido, porcentISRRetenido,
             claveUnidadSAT, unidad, claveProductoSAT) {
+
+        // Normalizar valores numéricos
+        salePrice = Number(salePrice) || 0;
+        porcentTax = Number(porcentTax) || 0;
+        porcentIVARetenido = Number(porcentIVARetenido) || 0;
+        porcentISRRetenido = Number(porcentISRRetenido) || 0;
 
         var tax = (porcentTax > 0) ? ((porcentTax * 0.01) * salePrice) : 0;
         var IVARetenido = (porcentIVARetenido > 0) ? ((porcentIVARetenido * 0.01) * salePrice) : 0;
@@ -211,18 +273,18 @@
         renglon += "<div class=\"col-1\">";
         renglon += "<button type=\"button\" class=\"btn btn-danger quitProduct\"><span class=\"far fa-trash-alt\"></span></button>";
         renglon += " <button type=\"button\" data-toggle=\"modal\" data-target=\"#modelMoreInfoRow\" class=\"btn btn-primary btnInfo\"><span class=\"fa fa-fw fa-pencil-alt\"></span></button> ";
-        renglon += "<input type=\"hidden\" class=\"idProductR\" name=\"idProductR\" value=\"" + idProduct + "\">";  // <-- 🔥 AQUÍ VA
+        renglon += "<input type=\"hidden\" class=\"idProductR\" name=\"idProductR\" value=\"" + (idProduct || "") + "\">";
         renglon += "</div>";
 
         renglon += "<div class=\"col-1\">";
-        renglon += "<input type=\"hidden\" class=\"claveProductoSATR\" name=\"claveProductoSATR\" value=\"" + claveProductoSAT + "\">";
-        renglon += "<input type=\"hidden\" class=\"claveUnidadSatR\" name=\"claveUnidadSatR\" value=\"" + claveUnidadSAT + "\">";
-        renglon += "<input type=\"hidden\" class=\"unidad\" name=\"unidad\" value=\"" + unidad + "\">";
-        renglon += "<input type=\"text\" class=\"form-control codeProduct\" name=\"codeProduct\" value=\"" + codeProduct + "\"> </div>";
+        renglon += "<input type=\"hidden\" class=\"claveProductoSATR\" name=\"claveProductoSATR\" value=\"" + (claveProductoSAT || "") + "\">";
+        renglon += "<input type=\"hidden\" class=\"claveUnidadSatR\" name=\"claveUnidadSatR\" value=\"" + (claveUnidadSAT || "") + "\">";
+        renglon += "<input type=\"hidden\" class=\"unidad\" name=\"unidad\" value=\"" + (unidad || "") + "\">";
+        renglon += "<input type=\"text\" class=\"form-control codeProduct\" name=\"codeProduct\" value=\"" + (codeProduct || "") + "\"> </div>";
 
-        renglon += "<div class=\"col-1\"> <input type=\"text\" class=\"form-control lote\" name=\"lote\" value=\"" + lote + "\" required> </div>";
+        renglon += "<div class=\"col-1\"> <input type=\"text\" class=\"form-control lote\" name=\"lote\" value=\"" + (lote || "") + "\" required> </div>";
 
-        renglon += "<div class=\"col-6\"> <input type=\"text\" class=\"form-control description\" name=\"description\" value=\"" + description + "\" required> </div>";
+        renglon += "<div class=\"col-6\"> <input type=\"text\" class=\"form-control description\" name=\"description\" value=\"" + (description || "") + "\" required> </div>";
 
         renglon += "<div class=\"col-1\"> <input type=\"number\" class=\"form-control cant\" name=\"cant\" value=\"1\" required>";
         renglon += "<input type=\"hidden\" class=\"porcentIVARetenido\" name=\"porcentIVARetenido\" value=\"" + porcentIVARetenido + "\">";
@@ -241,7 +303,10 @@
 
         $(".rowProducts").append(renglon);
 
-        listProducts();
+        // Si tienes listProducts() definida en tu proyecto la llamamos para recalcular totales
+        if (typeof listProducts === "function") {
+            listProducts();
+        }
     }
 
 
