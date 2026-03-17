@@ -12,6 +12,7 @@ use julio101290\boilerplateproducts\Models\ProductsModel;
 use julio101290\boilerplateproducts\Models\FieldsExtraProductosModel;
 use julio101290\boilerplateproducts\Models\CategoriasModel;
 use julio101290\boilerplatestorages\Models\StoragesModel;
+use julio101290\boilerplatestorages\Models\UsuariosAlmacenModel;
 
 class SaldosController extends BaseController {
 
@@ -24,6 +25,7 @@ class SaldosController extends BaseController {
     protected $fieldsExtraValues;
     protected $products;
     protected $storages;
+    protected $storagesPerUser;
 
     public function __construct() {
         $this->saldos = new SaldosModel();
@@ -33,6 +35,7 @@ class SaldosController extends BaseController {
         $this->fieldsExtra = new FieldsExtraProductosModel();
         $this->products = new ProductsModel();
         $this->storages = new StoragesModel();
+        $this->storagesPerUser = new UsuariosAlmacenModel;
         helper(['menu', 'utilerias']);
     }
 
@@ -42,7 +45,13 @@ class SaldosController extends BaseController {
         $idUser = user()->id;
         $titulos["empresas"] = $this->empresa->mdlEmpresasPorUsuario($idUser);
         $empresasID = count($titulos["empresas"]) === 0 ? [0] : array_column($titulos["empresas"], "id");
-
+        
+        $storagesUser = $this->storagesPerUser
+                        ->where("idUsuario",$idUser)
+                        ->where("status","on")->asArray()->findAll();
+        
+        $storagesUser = count($storagesUser) === 0 ? [0] : array_column($storagesUser, "idStorage");
+        
         if ($this->request->isAJAX()) {
             $request = service('request');
 
@@ -64,7 +73,7 @@ class SaldosController extends BaseController {
             ];
             $orderField = $fields[$orderColumnIndex] ?? 'id';
 
-            $builder = $this->saldos->mdlGetSaldos($empresasID);
+            $builder = $this->saldos->mdlGetSaldos($empresasID,$storagesUser);
 
             $total = clone $builder;
             $recordsTotal = $total->countAllResults(false);

@@ -37,7 +37,7 @@ class SaldosModel extends Model {
     protected $validationMessages = [];
     protected $skipValidation = false;
 
-    public function mdlGetSaldos($idEmpresas) {
+    public function mdlGetSaldos($idEmpresas,$storagesUser) {
         return $this->db->table('saldos a')
                         ->select("
             a.id
@@ -68,6 +68,7 @@ class SaldosModel extends Model {
                         // 👇 LEFT JOIN para que NO reviente si no hay empleado
                         ->join('employes e', 'e.id = pe.idEmploye', 'left')
                         ->whereIn('a.idEmpresa', $idEmpresas)
+                        ->whereIn('a.idAlmacen', $storagesUser)
                         ->orderBy('a.id', 'DESC');
     }
 
