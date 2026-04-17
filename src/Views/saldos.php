@@ -314,8 +314,10 @@
             window.open("<?= base_url('admin/saldos/barcode/') ?>" + "/" + idProduct, "_blank");
     });
             $(".btnPrintCodes").on("click", function () {
-
-    window.open("<?= base_url('admin/saldos/barcode/') ?>" + "/0", "_blank");
+     var idEmpresa = $('#idEmpresaList').val();
+     var idAlmacen = $('.idAlmacen').val();
+     var idProducto2 = $('.idProducto').val();
+    window.open("<?= base_url('admin/saldos/barcode/') ?>" + "/0" + "/" + idEmpresa + "/" + idAlmacen + "/" + idProducto2, "_blank");
     });
             $(".tableSaldos").on("click", ".btnEditExtra", function () {
 

@@ -70,7 +70,7 @@ $routes->group('admin', function ($routes) {
             , ['namespace' => 'julio101290\boilerplateinventory\Controllers']
     );
     $routes->get('saldos/barcode/(:any)'
-            , 'SaldosController::getBarcodePDF/$1'
+            , 'SaldosController::getBarcodePDF/$1/$2/$3/$4'
             , ['namespace' => 'julio101290\boilerplateinventory\Controllers']
     );
 

@@ -117,6 +117,12 @@ class SaldosController extends BaseController {
         } else {
             $empresasID = $idEmpresa;
         }
+        
+        $storagesUser = $this->storagesPerUser
+                        ->where("idUsuario",$idUser)
+                        ->where("status","on")->asArray()->findAll();
+        
+        $storagesUser = count($storagesUser) === 0 ? [0] : array_column($storagesUser, "idStorage");
 
 
         if ($this->request->isAJAX()) {
@@ -140,7 +146,7 @@ class SaldosController extends BaseController {
             ];
             $orderField = $fields[$orderColumnIndex] ?? 'id';
 
-            $builder = $this->saldos->mdlGetSaldosFilters($empresasID, $idAlmacen, $idProducto);
+            $builder = $this->saldos->mdlGetSaldosFilters($empresasID, $idAlmacen, $idProducto,$storagesUser);
 
             $total = clone $builder;
             $recordsTotal = $total->countAllResults(false);
@@ -277,7 +283,7 @@ class SaldosController extends BaseController {
         return $this->respondDeleted($registro, lang("saldos.msg_delete"));
     }
 
-    public function getBarcodePDF($idProducto, $isMail = 0) {
+    public function getBarcodePDF($idProducto, $idEmpresa, $idAlmacen, $idProducto2, $isMail = 0) {
         // TCPDF
         $pdf = new \TCPDF('L', 'mm', array(101, 50), true, 'UTF-8', false);
         $pdf->setPrintHeader(false);
@@ -312,17 +318,36 @@ class SaldosController extends BaseController {
         helper('auth');
         $idUser = user()->id;
 
-        $empresas = $this->empresa->mdlEmpresasPorUsuario($idUser);
-        $empresasID = count($empresas) == 0 ? [0] : array_column($empresas, 'id');
+        if(!empty($idEmpresa)){
+            $empresasID = [$idEmpresa];
+        }else {
+            $empresas = $this->empresa->mdlEmpresasPorUsuario($idUser);
+            $empresasID = count($empresas) == 0 ? [0] : array_column($empresas, 'id');
+        }
+        
+        $storagesUser = $this->storagesPerUser
+                        ->where("idUsuario",$idUser)
+                        ->where("status","on")->asArray()->findAll();
+        
+        $storagesUser = count($storagesUser) === 0 ? [0] : array_column($storagesUser, "idStorage");
+
 
         // TODOS LOS PRODUCTOS
         if ($idProducto == 0) {
 
-            $productos = $this->saldos
-                    ->select("id,lote, descripcion")
-                    ->whereIn("idEmpresa", $empresasID)
-                    ->findAll();
+            $query = $this->saldos
+                ->select("id, lote, descripcion")
+                ->whereIn("idEmpresa", $empresasID)
+                ->whereIn('idAlmacen', $storagesUser);
 
+            if ($idAlmacen != 0) {
+                $query->where("idAlmacen", $idAlmacen);
+            }
+            if ($idProducto2 != 0) {
+                $query->where("idProducto", $idProducto2);
+            }
+
+            $productos = $query->findAll();
             foreach ($productos as $value) {
 
                 if (strlen($value['lote']) <= 3) {
@@ -356,9 +381,9 @@ class SaldosController extends BaseController {
                         'N'
                 );
                 $pdf->SetAutoPageBreak(false, 0);
-                $pdf->SetFont('helvetica', '', 7);
+                $pdf->SetFont('helvetica', 'B', 15);
                 $pdf->SetXY(5, 28);
-                $pdf->MultiCell(70, 5, $value['descripcion'], 0, 'C');
+                $pdf->MultiCell(90, 5, $value['descripcion'], 0, 'C');
             }
         } else {
 
@@ -397,9 +422,9 @@ class SaldosController extends BaseController {
             );
             $pdf->SetAutoPageBreak(false, 0);
                         // Descripción debajo
-                $pdf->SetFont('helvetica', '', 7);
+                $pdf->SetFont('helvetica', 'B', 15);
                 $pdf->SetXY(5, 28);
-                $pdf->MultiCell(70, 5, $producto['descripcion'], 0, 'C');
+                $pdf->MultiCell(90, 5, $producto['descripcion'], 0, 'C');
         }
 
         ob_end_clean();
@@ -667,16 +692,27 @@ class SaldosController extends BaseController {
 
 //        $empresasID[0] = $postData["idEmpresa"];
 //        $empresasID = array_column($empresasID[0], "id");
+         $almacenesPorUsuario = $this->storagesPerUser->select("*")
+                        ->where("idUsuario", $idUser)
+                        ->where("status", "on")->findAll();
+
+        $almacenesPorUsuario = array_column($almacenesPorUsuario, "idStorage");
         if (!isset($postData['searchTerm'])) {
-            $listStorages = $this->storages->mdlStorages($empresasID)->get()->getResultArray();
+            $listStorages = $this->storages
+                    ->whereIn("idEmpresa", $empresasID)
+                    ->whereIn("id", $almacenesPorUsuario)
+                    ->get()->getResultArray();
         } else {
             $searchTerm = $postData["searchTerm"];
             $listStorages = $this->storages
-                            ->where("idEmpresa", $empresasID)
-                            ->like('name', $searchTerm)
-                            ->orLike('id', $searchTerm)
-                            ->orLike('code', $searchTerm)
-                            ->get()->getResultArray();
+                    ->whereIn("idEmpresa", $empresasID) // Filtro obligatorio
+                    ->whereIn("id", $almacenesPorUsuario) // Filtro obligatorio
+                    ->groupStart() // Inicia paréntesis: WHERE ... AND (
+                        ->like('name', $searchTerm)
+                        ->orLike('id', $searchTerm)
+                        ->orLike('code', $searchTerm)
+                    ->groupEnd() // Cierra paréntesis: )
+                    ->get()->getResultArray();
         }
 
 

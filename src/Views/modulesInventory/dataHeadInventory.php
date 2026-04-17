@@ -360,8 +360,8 @@
          */
 
         $("#idEmpresaInventory").on("change", function () {
-
-
+            $('#idStorage').val('').trigger('change');
+            $('#idTipoMovimientoInventario').val('').trigger('change');
             var idEmpresa = $(this).val();
             console.log("ID EMPRESA", idEmpresa);
             var datos = new FormData();
@@ -482,7 +482,7 @@
 
         $("#idStorage").on("change", function () {
 
-
+            $('#idTipoMovimientoInventario').val('').trigger('change');
             var idStorage = $(this).val();
             var idEmpresa = $("#idEmpresaInventory").val();
             var idTipoMovimiento = $("#idTipoMovimientoInventario").val();
@@ -500,8 +500,9 @@
 
 
         $("#idTipoMovimientoInventario").on("change", function () {
-
-
+            $('.rowProducts').html('');
+            $('#listProducts').val('[]');
+            
             var idStorage = $("#idStorage").val();
             var idEmpresa = $("#idEmpresaInventory").val();
             var idTipoMovimiento = $(this).val();
