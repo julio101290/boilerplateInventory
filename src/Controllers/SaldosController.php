@@ -38,6 +38,10 @@ class SaldosController extends BaseController {
         $this->storagesPerUser = new UsuariosAlmacenModel;
         helper(['menu', 'utilerias']);
     }
+    /**
+     * Index
+     * @return type
+     */
 
     public function index() {
         helper('auth');
