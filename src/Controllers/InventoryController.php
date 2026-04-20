@@ -223,7 +223,7 @@ class InventoryController extends BaseController {
                 if (!empty($searchValue)) {
                     $builder->groupStart()
                             ->like('a.code', $searchValue)
-                            ->orLike('a.description', $searchValue)
+                            ->orLike('description', $searchValue)
                             ->orLike('b.nombre', $searchValue)
                             ->orLike('c.lote', $searchValue)
                             ->orLike('d.name', $searchValue)
@@ -687,6 +687,8 @@ class InventoryController extends BaseController {
                             /**
                              * Verificamos saldo
                              */
+                            unset($datosSaldo["descripcion"]);
+                            unset($datosSaldo["codigoProducto"]);
                             $datosNuevosSaldo = $this->saldos->select("*")->where($datosSaldo)->first();
 
                             if ($datosNuevosSaldo["cantidad"] < $datosDetalle["cant"]) {
@@ -909,7 +911,7 @@ class InventoryController extends BaseController {
 
 
                         $datosSaldo["idEmpresa"] = $datos["idEmpresa"];
-                        $datosSaldo["idAlmacen"] = $datos["idAlmacen"];
+                        $datosSaldo["idAlmacen"] = $datos["idAlmacen"] ?? $datos["idStorage"];
                         $datosSaldo["idProducto"] = $value["idProduct"];
                         $datosSaldo["lote"] = $value["lote"];
 
@@ -1108,6 +1110,18 @@ class InventoryController extends BaseController {
                 ->where("id", $dataStorage["idBranchOffice"])
                 ->first();
 
+        // DETECT TYPE MOV
+
+        $typeMov = $this->tiposMovimiento->where("id", $datos["typeMov"])->first();
+
+        if ($typeMov["tipo"] == "SAL") {
+
+            return $this->response->setJSON([
+                        "lot" => $datos["lote"],
+                        "typeMov" => $typeMov["tipo"]
+            ]);
+        }
+
         if (empty($branchOfficeData["key"])) {
 
             return $this->response->setJSON([
@@ -1182,7 +1196,8 @@ class InventoryController extends BaseController {
         $lot = $baseLot . $consecutivo;
 
         return $this->response->setJSON([
-                    "lot" => $lot
+                    "lot" => $lot,
+                    "typeMov" => $typeMov["tipo"]
         ]);
     }
 

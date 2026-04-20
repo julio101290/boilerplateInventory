@@ -149,11 +149,14 @@
         var claveUnidadSAT = $btn.attr("unidadSAT");
         var unidad = $btn.attr("unidad");
         var claveProductoSAT = $btn.attr("claveProductoSAT");
+        var typeMov = $("#idTipoMovimientoInventario").val();
 
         // Preparar datos para el AJAX
         var datos = new FormData();
         datos.append("idAlmacen", almacen);
         datos.append("idProducto", idProduct);
+        datos.append("typeMov", typeMov);
+        datos.append("lote", lote);
 
         $.ajax({
             url: "<?= base_url('admin/inventory/getLastLot') ?>",
@@ -184,34 +187,38 @@
                     return;
                 }
 
+                if (respuesta["typeMov"]== "SAL") {
+                    loteFinal = respuesta["lot"];
+                } else
+                {
 
-                // Asumimos que los últimos 6 caracteres son el consecutivo numérico
-                var loteBase = loteCalculado.slice(0, -6);  // ej: "LMPLMLAPTOP"
-                var consecutivoBackend = parseInt(loteCalculado.slice(-6), 10);
-                if (isNaN(consecutivoBackend))
-                    consecutivoBackend = 0;
+                    // Asumimos que los últimos 6 caracteres son el consecutivo numérico
+                    var loteBase = loteCalculado.slice(0, -6);  // ej: "LMPLMLAPTOP"
+                    var consecutivoBackend = parseInt(loteCalculado.slice(-6), 10);
+                    if (isNaN(consecutivoBackend))
+                        consecutivoBackend = 0;
 
-                // --- 2) Decidir loteFinal usando lotesContador para evitar race conditions ---
-                var loteFinal;
+                    // --- 2) Decidir loteFinal usando lotesContador para evitar race conditions ---
+                    var loteFinal;
 
-                if (!lotesContador.hasOwnProperty(loteBase)) {
-                    // Primera vez que vemos este loteBase: inicializamos con el consecutivo del backend
-                    lotesContador[loteBase] = consecutivoBackend;
-                    loteFinal = loteCalculado;
-                } else {
-                    // Ya había un contador local
-                    if (consecutivoBackend > lotesContador[loteBase]) {
-                        // Backend avanzó por fuera de esta sesión: sincronizamos al backend
+                    if (!lotesContador.hasOwnProperty(loteBase)) {
+                        // Primera vez que vemos este loteBase: inicializamos con el consecutivo del backend
                         lotesContador[loteBase] = consecutivoBackend;
                         loteFinal = loteCalculado;
                     } else {
-                        // Usamos el siguiente consecutivo en memoria
-                        lotesContador[loteBase] = lotesContador[loteBase] + 1;
-                        var nuevo = String(lotesContador[loteBase]).padStart(6, "0");
-                        loteFinal = loteBase + nuevo;
+                        // Ya había un contador local
+                        if (consecutivoBackend > lotesContador[loteBase]) {
+                            // Backend avanzó por fuera de esta sesión: sincronizamos al backend
+                            lotesContador[loteBase] = consecutivoBackend;
+                            loteFinal = loteCalculado;
+                        } else {
+                            // Usamos el siguiente consecutivo en memoria
+                            lotesContador[loteBase] = lotesContador[loteBase] + 1;
+                            var nuevo = String(lotesContador[loteBase]).padStart(6, "0");
+                            loteFinal = loteBase + nuevo;
+                        }
                     }
                 }
-
                 // --- 3) Llamamos a la función que agrega el renglón ---
                 agregarRenglon(
                         idProduct,
