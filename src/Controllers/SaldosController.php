@@ -38,24 +38,24 @@ class SaldosController extends BaseController {
         $this->storagesPerUser = new UsuariosAlmacenModel;
         helper(['menu', 'utilerias']);
     }
+
     /**
      * Index
      * @return type
      */
-
     public function index() {
         helper('auth');
 
         $idUser = user()->id;
         $titulos["empresas"] = $this->empresa->mdlEmpresasPorUsuario($idUser);
         $empresasID = count($titulos["empresas"]) === 0 ? [0] : array_column($titulos["empresas"], "id");
-        
+
         $storagesUser = $this->storagesPerUser
-                        ->where("idUsuario",$idUser)
-                        ->where("status","on")->asArray()->findAll();
-        
+                        ->where("idUsuario", $idUser)
+                        ->where("status", "on")->asArray()->findAll();
+
         $storagesUser = count($storagesUser) === 0 ? [0] : array_column($storagesUser, "idStorage");
-        
+
         if ($this->request->isAJAX()) {
             $request = service('request');
 
@@ -77,7 +77,7 @@ class SaldosController extends BaseController {
             ];
             $orderField = $fields[$orderColumnIndex] ?? 'id';
 
-            $builder = $this->saldos->mdlGetSaldos($empresasID,$storagesUser);
+            $builder = $this->saldos->mdlGetSaldos($empresasID, $storagesUser);
 
             $total = clone $builder;
             $recordsTotal = $total->countAllResults(false);
@@ -121,13 +121,12 @@ class SaldosController extends BaseController {
         } else {
             $empresasID = $idEmpresa;
         }
-        
-        $storagesUser = $this->storagesPerUser
-                        ->where("idUsuario",$idUser)
-                        ->where("status","on")->asArray()->findAll();
-        
-        $storagesUser = count($storagesUser) === 0 ? [0] : array_column($storagesUser, "idStorage");
 
+        $storagesUser = $this->storagesPerUser
+                        ->where("idUsuario", $idUser)
+                        ->where("status", "on")->asArray()->findAll();
+
+        $storagesUser = count($storagesUser) === 0 ? [0] : array_column($storagesUser, "idStorage");
 
         if ($this->request->isAJAX()) {
             $request = service('request');
@@ -150,7 +149,7 @@ class SaldosController extends BaseController {
             ];
             $orderField = $fields[$orderColumnIndex] ?? 'id';
 
-            $builder = $this->saldos->mdlGetSaldosFilters($empresasID, $idAlmacen, $idProducto,$storagesUser);
+            $builder = $this->saldos->mdlGetSaldosFilters($empresasID, $idAlmacen, $idProducto, $storagesUser);
 
             $total = clone $builder;
             $recordsTotal = $total->countAllResults(false);
@@ -210,7 +209,7 @@ class SaldosController extends BaseController {
         $titulos["subtitle"] = lang('saldos.subtitle');
         return view('julio101290\boilerplateinventory\Views\infoInventario', $titulos);
     }
-    
+
     public function getGetInfoProductsCode() {
 
         helper('auth');
@@ -226,12 +225,48 @@ class SaldosController extends BaseController {
 //        $result = $this->saldos->where("lote", $idBalance)->asObject()->first();
 
         $result = $this->saldos->mdlGetProducto($idBalance);
-        
+
         if (empty($result)) {
             return $this->response->setJSON([]);
         }
 
         return $this->response->setJSON($result[0]);
+    }
+
+    /**
+     * Vista pública de información de producto.
+     * No requiere sesión ni usuario autenticado.
+     * Recibe el código del producto por GET (segmento de la URL).
+     */
+    public function verProductoPublico($codigo = null) {
+        $data['codigo'] = $codigo;
+        $data['encontrado'] = false;
+        $data['producto'] = null;
+        $data['mensaje'] = null;
+
+        if (empty($codigo)) {
+            $data['mensaje'] = null; // sin código, solo mostramos el buscador vacío
+            return view('julio101290\boilerplateinventory\Views\producto_publico', $data);
+        }
+
+        $result = $this->saldos->mdlGetProducto($codigo);
+
+        if (empty($result)) {
+            $data['mensaje'] = 'No se encontró el artículo con el código proporcionado.';
+            return view('julio101290\boilerplateinventory\Views\producto_publico', $data);
+        }
+
+        $producto = $result[0];
+
+        // Igual que en el flujo actual: separar el historial de mantenimiento
+        if (!empty($producto->maintenanceHistory)) {
+            $producto->maintenanceHistory = preg_replace('/\s*\|\|\s*/', "\n\n", $producto->maintenanceHistory);
+        }
+
+        $data['producto'] = $producto;
+        $data['encontrado'] = true;
+
+        return view('julio101290\boilerplateinventory\Views\producto_publico', $data);
     }
 
     public function save() {
@@ -322,27 +357,26 @@ class SaldosController extends BaseController {
         helper('auth');
         $idUser = user()->id;
 
-        if(!empty($idEmpresa)){
+        if (!empty($idEmpresa)) {
             $empresasID = [$idEmpresa];
-        }else {
+        } else {
             $empresas = $this->empresa->mdlEmpresasPorUsuario($idUser);
             $empresasID = count($empresas) == 0 ? [0] : array_column($empresas, 'id');
         }
-        
-        $storagesUser = $this->storagesPerUser
-                        ->where("idUsuario",$idUser)
-                        ->where("status","on")->asArray()->findAll();
-        
-        $storagesUser = count($storagesUser) === 0 ? [0] : array_column($storagesUser, "idStorage");
 
+        $storagesUser = $this->storagesPerUser
+                        ->where("idUsuario", $idUser)
+                        ->where("status", "on")->asArray()->findAll();
+
+        $storagesUser = count($storagesUser) === 0 ? [0] : array_column($storagesUser, "idStorage");
 
         // TODOS LOS PRODUCTOS
         if ($idProducto == 0) {
 
             $query = $this->saldos
-                ->select("id, lote, descripcion")
-                ->whereIn("idEmpresa", $empresasID)
-                ->whereIn('idAlmacen', $storagesUser);
+                    ->select("id, lote, descripcion")
+                    ->whereIn("idEmpresa", $empresasID)
+                    ->whereIn('idAlmacen', $storagesUser);
 
             if ($idAlmacen != 0) {
                 $query->where("idAlmacen", $idAlmacen);
@@ -425,15 +459,245 @@ class SaldosController extends BaseController {
                     'N'
             );
             $pdf->SetAutoPageBreak(false, 0);
-                        // Descripción debajo
-                $pdf->SetFont('helvetica', 'B', 15);
-                $pdf->SetXY(5, 28);
-                $pdf->MultiCell(90, 5, $producto['descripcion'], 0, 'C');
+            // Descripción debajo
+            $pdf->SetFont('helvetica', 'B', 15);
+            $pdf->SetXY(5, 28);
+            $pdf->MultiCell(90, 5, $producto['descripcion'], 0, 'C');
         }
 
         ob_end_clean();
         $this->response->setHeader("Content-Type", "application/pdf");
         $pdf->Output('etiqueta.pdf', 'I');
+    }
+
+    public function getQR96PDF($idProducto, $idEmpresa, $idAlmacen, $idProducto2, $isMail = 0) {
+
+        // Medidas reales del ticket: 9.6cm x 9.6cm = 96mm x 96mm
+        $labelSize = 96; // mm (ancho = alto, es cuadrado)
+
+        $pdf = new \TCPDF('P', 'mm', array($labelSize, $labelSize), true, 'UTF-8', false);
+        $pdf->setPrintHeader(false);
+        $pdf->setPrintFooter(false);
+        $pdf->SetMargins(0, 0, 0);
+        $pdf->SetAutoPageBreak(false, 0);
+
+        // Estilo QR
+        $styleQR = array(
+            'border' => true,
+            'vpadding' => 'auto',
+            'hpadding' => 'auto',
+            'fgcolor' => array(0, 0, 0),
+            'bgcolor' => false
+        );
+
+        helper('auth');
+        $idUser = user()->id;
+
+        if (!empty($idEmpresa)) {
+            $empresasID = [$idEmpresa];
+        } else {
+            $empresas = $this->empresa->mdlEmpresasPorUsuario($idUser);
+            $empresasID = count($empresas) == 0 ? [0] : array_column($empresas, 'id');
+        }
+
+        $storagesUser = $this->storagesPerUser
+                        ->where("idUsuario", $idUser)
+                        ->where("status", "on")->asArray()->findAll();
+
+        $storagesUser = count($storagesUser) === 0 ? [0] : array_column($storagesUser, "idStorage");
+
+        // Dibuja el ticket completo (QR arriba, código y descripción abajo)
+        $drawLabel = function ($pdf, $lote, $descripcion) use ($styleQR, $labelSize) {
+            // QR grande, centrado, arriba
+            $qrSize = 60;
+            $qrX = ($labelSize - $qrSize) / 2;
+            $qrY = 6;
+            
+            $loteQR = base_url("admin/inventario/producto/".$lote);
+
+            $pdf->write2DBarcode(
+                    $loteQR,
+                    'QRCODE,M',
+                    $qrX,
+                    $qrY,
+                    $qrSize,
+                    $qrSize,
+                    $styleQR,
+                    'N'
+            );
+
+            // Código (lote) debajo del QR
+            $pdf->SetFont('helvetica', '', 11);
+            $pdf->SetXY(4, $qrY + $qrSize + 3);
+            $pdf->MultiCell($labelSize - 8, 5, $lote, 0, 'C');
+
+            // Descripción debajo del código
+            $pdf->SetFont('helvetica', 'B', 12);
+            $pdf->SetXY(4, $qrY + $qrSize + 11);
+            $pdf->MultiCell($labelSize - 8, 5, $descripcion, 0, 'C');
+        };
+
+        if ($idProducto == 0) {
+            $query = $this->saldos
+                    ->select("id, lote, descripcion")
+                    ->whereIn("idEmpresa", $empresasID)
+                    ->whereIn('idAlmacen', $storagesUser);
+
+            if ($idAlmacen != 0) {
+                $query->where("idAlmacen", $idAlmacen);
+            }
+            if ($idProducto2 != 0) {
+                $query->where("idProducto", $idProducto2);
+            }
+
+            $productos = $query->findAll();
+
+            foreach ($productos as $value) {
+                if (strlen($value['lote']) <= 3) {
+                    continue;
+                }
+
+                $pdf->AddPage();
+                $drawLabel($pdf, $value['lote'], $value['descripcion']);
+            }
+        } else {
+            $producto = $this->saldos
+                    ->select("lote, descripcion")
+                    ->whereIn("idEmpresa", $empresasID)
+                    ->where("id", $idProducto)
+                    ->first();
+
+            $pdf->AddPage();
+            $drawLabel($pdf, $producto['lote'], $producto['descripcion']);
+        }
+
+        ob_end_clean();
+        $this->response->setHeader("Content-Type", "application/pdf");
+        $pdf->Output('etiqueta_qr_96.pdf', 'I');
+    }
+
+    public function getQRPDFV2($idProducto, $idEmpresa, $idAlmacen, $idProducto2, $isMail = 0) {
+
+        // Medidas reales del ticket individual
+        $labelWidth = 51; // mm
+        $labelHeight = 22; // mm
+        $gap = 3; // separación entre los 2 tickets
+        // Página = 2 tickets + separación
+        $pageWidth = ($labelWidth * 2) + $gap; // 51+3+51 = 105 mm
+        $pageHeight = $labelHeight;             // 22 mm
+
+        $pdf = new \TCPDF('L', 'mm', array($pageWidth, $pageHeight), true, 'UTF-8', false);
+        $pdf->setPrintHeader(false);
+        $pdf->setPrintFooter(false);
+        $pdf->SetMargins(0, 0, 0);
+        $pdf->SetAutoPageBreak(false, 0);
+
+        // Estilo QR
+        $styleQR = array(
+            'border' => true,
+            'vpadding' => 'auto',
+            'hpadding' => 'auto',
+            'fgcolor' => array(0, 0, 0),
+            'bgcolor' => false
+        );
+
+        helper('auth');
+        $idUser = user()->id;
+
+        if (!empty($idEmpresa)) {
+            $empresasID = [$idEmpresa];
+        } else {
+            $empresas = $this->empresa->mdlEmpresasPorUsuario($idUser);
+            $empresasID = count($empresas) == 0 ? [0] : array_column($empresas, 'id');
+        }
+
+        $storagesUser = $this->storagesPerUser
+                        ->where("idUsuario", $idUser)
+                        ->where("status", "on")->asArray()->findAll();
+
+        $storagesUser = count($storagesUser) === 0 ? [0] : array_column($storagesUser, "idStorage");
+
+        // X inicial de cada ticket: izquierdo=0, derecho=51+3=54
+        $offsets = [0, $labelWidth + $gap];
+
+        // Dibuja UN ticket (QR + código + descripción) en la posición X que se le indique
+        $drawLabel = function ($pdf, $offsetX, $lote, $descripcion) use ($styleQR, $labelWidth, $labelHeight) {
+            // QR a la izquierda del ticket, centrado verticalmente
+            $qrSize = 18;
+            $qrX = $offsetX + 1.5;
+            $qrY = ($labelHeight - $qrSize) / 2;
+            
+            $loteQR = base_url("admin/inventario/producto/".$lote);
+
+            $pdf->write2DBarcode(
+                    $loteQR,
+                    'QRCODE,M',
+                    $qrX,
+                    $qrY,
+                    $qrSize,
+                    $qrSize,
+                    $styleQR,
+                    'N'
+            );
+
+            // Área de texto a la derecha del QR
+            $textX = $qrX + $qrSize + 1.5;
+            $textWidth = $labelWidth - ($textX - $offsetX) - 1;
+
+            // Código (lote) arriba
+            $pdf->SetFont('helvetica', '', 7);
+            $pdf->SetXY($textX, 2);
+            $pdf->MultiCell($textWidth, 3, $lote, 0, 'C');
+
+            // Descripción debajo
+            $pdf->SetFont('helvetica', 'B', 7.5);
+            $pdf->SetXY($textX, 9);
+            $pdf->MultiCell($textWidth, 3, $descripcion, 0, 'C');
+        };
+
+        if ($idProducto == 0) {
+            $query = $this->saldos
+                    ->select("id, lote, descripcion")
+                    ->whereIn("idEmpresa", $empresasID)
+                    ->whereIn('idAlmacen', $storagesUser);
+
+            if ($idAlmacen != 0) {
+                $query->where("idAlmacen", $idAlmacen);
+            }
+            if ($idProducto2 != 0) {
+                $query->where("idProducto", $idProducto2);
+            }
+
+            $productos = $query->findAll();
+
+            foreach ($productos as $value) {
+                if (strlen($value['lote']) <= 3) {
+                    continue;
+                }
+
+                $pdf->AddPage();
+
+                foreach ($offsets as $offsetX) {
+                    $drawLabel($pdf, $offsetX, $value['lote'], $value['descripcion']);
+                }
+            }
+        } else {
+            $producto = $this->saldos
+                    ->select("lote, descripcion")
+                    ->whereIn("idEmpresa", $empresasID)
+                    ->where("id", $idProducto)
+                    ->first();
+
+            $pdf->AddPage();
+
+            foreach ($offsets as $offsetX) {
+                $drawLabel($pdf, $offsetX, $producto['lote'], $producto['descripcion']);
+            }
+        }
+
+        ob_end_clean();
+        $this->response->setHeader("Content-Type", "application/pdf");
+        $pdf->Output('etiqueta_qr.pdf', 'I');
     }
 
     /**
@@ -696,27 +960,27 @@ class SaldosController extends BaseController {
 
 //        $empresasID[0] = $postData["idEmpresa"];
 //        $empresasID = array_column($empresasID[0], "id");
-         $almacenesPorUsuario = $this->storagesPerUser->select("*")
+        $almacenesPorUsuario = $this->storagesPerUser->select("*")
                         ->where("idUsuario", $idUser)
                         ->where("status", "on")->findAll();
 
         $almacenesPorUsuario = array_column($almacenesPorUsuario, "idStorage");
         if (!isset($postData['searchTerm'])) {
             $listStorages = $this->storages
-                    ->whereIn("idEmpresa", $empresasID)
-                    ->whereIn("id", $almacenesPorUsuario)
-                    ->get()->getResultArray();
+                            ->whereIn("idEmpresa", $empresasID)
+                            ->whereIn("id", $almacenesPorUsuario)
+                            ->get()->getResultArray();
         } else {
             $searchTerm = $postData["searchTerm"];
             $listStorages = $this->storages
-                    ->whereIn("idEmpresa", $empresasID) // Filtro obligatorio
-                    ->whereIn("id", $almacenesPorUsuario) // Filtro obligatorio
-                    ->groupStart() // Inicia paréntesis: WHERE ... AND (
-                        ->like('name', $searchTerm)
-                        ->orLike('id', $searchTerm)
-                        ->orLike('code', $searchTerm)
-                    ->groupEnd() // Cierra paréntesis: )
-                    ->get()->getResultArray();
+                            ->whereIn("idEmpresa", $empresasID) // Filtro obligatorio
+                            ->whereIn("id", $almacenesPorUsuario) // Filtro obligatorio
+                            ->groupStart() // Inicia paréntesis: WHERE ... AND (
+                            ->like('name', $searchTerm)
+                            ->orLike('id', $searchTerm)
+                            ->orLike('code', $searchTerm)
+                            ->groupEnd() // Cierra paréntesis: )
+                            ->get()->getResultArray();
         }
 
 

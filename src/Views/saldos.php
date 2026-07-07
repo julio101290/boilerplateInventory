@@ -153,6 +153,8 @@
                     return `<td class="text-right py-0 align-middle">
                          <div class="btn-group btn-group-sm">
                              <button class="btn btn-success btn-barcode" data-id="${data.id}"><i class="fas fa-barcode"></i></button>
+                             <button class="btn btn-success btn-barcodeV2" data-id="${data.id}"><i class="fas fa-barcode"></i></button>
+                             <button class="btn btn-success btn-barcodeV3" data-id="${data.id}"><i class="fas fa-barcode"></i></button>
                              <button class="btn btn-primary btnEditExtra" data-toggle="modal" idSaldos="${data.id}" data-target="#modalAddExtraFields">  <i class=" fa fa-plus"></i></button>
                              <button class="btn btn-info btnAddEmploye" data-toggle="modal" idProducts="${data.id}" data-target="#modalProductoEmploye">  <i class=" fa fa-user"></i></button>
                             </div>
@@ -278,101 +280,117 @@
     $("#idEmpresaList").change(function () {
         $('.idAlmacen').val("0").trigger('change');
     })
-    
+
     $(".idProducto").select2({
-    ajax: {
-    url: "<?= base_url('admin/saldos/getProductsAjax') ?>",
+        ajax: {
+            url: "<?= base_url('admin/saldos/getProductsAjax') ?>",
             type: "post",
             dataType: 'json',
             delay: 250,
             data: function (params) {
-            // CSRF Hash
-            var csrfName = $('.txt_csrfname').attr('name'); // CSRF Token name
-                    var csrfHash = $('.txt_csrfname').val(); // CSRF hash
-                    var idEmpresa = $('.idEmpresaList').val(); // CSRF hash
+                // CSRF Hash
+                var csrfName = $('.txt_csrfname').attr('name'); // CSRF Token name
+                var csrfHash = $('.txt_csrfname').val(); // CSRF hash
+                var idEmpresa = $('.idEmpresaList').val(); // CSRF hash
 
-                    return {
+                return {
                     searchTerm: params.term, // search term
                     [csrfName]: csrfHash, // CSRF Token
-                            idEmpresa: idEmpresa // search term
-                    };
+                    idEmpresa: idEmpresa // search term
+                };
             },
             processResults: function (response) {
 
-            // Update CSRF Token
-            $('.txt_csrfname').val(response.token);
-                    return {
+                // Update CSRF Token
+                $('.txt_csrfname').val(response.token);
+                return {
                     results: response.data
-                    };
+                };
             },
             cache: true
-    }
+        }
     });
-            $(".tableSaldos").on("click", ".btn-barcode", function () {
+    $(".tableSaldos").on("click", ".btn-barcode", function () {
 
-    var idProduct = $(this).attr("data-id");
-            window.open("<?= base_url('admin/saldos/barcode/') ?>" + "/" + idProduct, "_blank");
+        var idProduct = $(this).attr("data-id");
+        window.open("<?= base_url('admin/saldos/barcode/') ?>" + "/" + idProduct, "_blank");
     });
-            $(".btnPrintCodes").on("click", function () {
-     var idEmpresa = $('#idEmpresaList').val();
-     var idAlmacen = $('.idAlmacen').val();
-     var idProducto2 = $('.idProducto').val();
-    window.open("<?= base_url('admin/saldos/barcode/') ?>" + "/0" + "/" + idEmpresa + "/" + idAlmacen + "/" + idProducto2, "_blank");
-    });
-            $(".tableSaldos").on("click", ".btnEditExtra", function () {
 
-    var idBalance = $(this).attr("idsaldos");
-            console.log("idBalance:", idBalance);
-            var datos = new FormData();
-            datos.append("idBalance", idBalance);
-            $.ajax({
+
+
+    $(".tableSaldos").on("click", ".btn-barcodeV2", function () {
+
+        var idProduct = $(this).attr("data-id");
+        window.open("<?= base_url('admin/saldos/barcodeV2/') ?>" + "/" + idProduct, "_blank");
+    });
+
+    $(".tableSaldos").on("click", ".btn-barcodeV3", function () {
+
+        var idProduct = $(this).attr("data-id");
+        window.open("<?= base_url('admin/saldos/barcodeV3/') ?>" + "/" + idProduct, "_blank");
+    });
+
+
+    $(".btnPrintCodes").on("click", function () {
+        var idEmpresa = $('#idEmpresaList').val();
+        var idAlmacen = $('.idAlmacen').val();
+        var idProducto2 = $('.idProducto').val();
+        window.open("<?= base_url('admin/saldos/barcode/') ?>" + "/0" + "/" + idEmpresa + "/" + idAlmacen + "/" + idProducto2, "_blank");
+    });
+    $(".tableSaldos").on("click", ".btnEditExtra", function () {
+
+        var idBalance = $(this).attr("idsaldos");
+        console.log("idBalance:", idBalance);
+        var datos = new FormData();
+        datos.append("idBalance", idBalance);
+        $.ajax({
 
             url: "<?= base_url('admin/saldos/getProductsFieldsExtra') ?>",
-                    method: "POST",
-                    data: datos,
-                    cache: false,
-                    contentType: false,
-                    processData: false,
-                    success: function (respuesta) {
+            method: "POST",
+            data: datos,
+            cache: false,
+            contentType: false,
+            processData: false,
+            success: function (respuesta) {
 
-                    $(".extraFields").html(respuesta);
-                    }
+                $(".extraFields").html(respuesta);
+            }
 
-            })
+        })
 
     });
-            $(".tableSaldos").on("click", ".btn-delete", function () {
-    var idSaldos = $(this).attr("data-id");
-            Swal.fire({
+    $(".tableSaldos").on("click", ".btn-delete", function () {
+        var idSaldos = $(this).attr("data-id");
+        Swal.fire({
             title: '<?= lang('boilerplate.global.sweet.title') ?>',
-                    text: "<?= lang('boilerplate.global.sweet.text') ?>",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#3085d6',
-                    cancelButtonColor: '#d33',
-                    confirmButtonText: '<?= lang('boilerplate.global.sweet.confirm_delete') ?>'
-            }).then((result) => {
-    if (result.value) {
-    $.ajax({
-    url: `<?= base_url('admin/saldos') ?>/` + idSaldos,
-            method: 'DELETE',
-    }).done((data, textStatus, jqXHR) => {
-    Toast.fire({
-    icon: 'success',
-            title: jqXHR.statusText,
+            text: "<?= lang('boilerplate.global.sweet.text') ?>",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: '<?= lang('boilerplate.global.sweet.confirm_delete') ?>'
+        }).then((result) => {
+            if (result.value) {
+                $.ajax({
+                    url: `<?= base_url('admin/saldos') ?>/` + idSaldos,
+                    method: 'DELETE',
+                }).done((data, textStatus, jqXHR) => {
+                    Toast.fire({
+                        icon: 'success',
+                        title: jqXHR.statusText,
+                    });
+                    tableSaldos.ajax.reload();
+                }).fail((error) => {
+                    Toast.fire({
+                        icon: 'error',
+                        title: error.responseJSON.messages.error,
+                    });
+                });
+            }
+        });
     });
-            tableSaldos.ajax.reload();
-    }).fail((error) => {
-    Toast.fire({
-    icon: 'error',
-            title: error.responseJSON.messages.error,
+    $(function () {
+        $("#modalAddSaldos").draggable();
     });
-    });
-    }
-    });
-    });
-            $(function () {
-            $("#modalAddSaldos").draggable();
-            });
 </script>
 <?= $this->endSection() ?>

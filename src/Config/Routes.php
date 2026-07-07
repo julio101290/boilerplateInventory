@@ -69,6 +69,7 @@ $routes->group('admin', function ($routes) {
             , 'SaldosController::getAllProducts'
             , ['namespace' => 'julio101290\boilerplateinventory\Controllers']
     );
+
     $routes->get('saldos/barcode/(:any)'
             , 'SaldosController::getBarcodePDF/$1/$2/$3/$4'
             , ['namespace' => 'julio101290\boilerplateinventory\Controllers']
@@ -100,5 +101,26 @@ $routes->group('admin', function ($routes) {
             , 'SaldosController::getGetInfoProductsCode'
             , ['namespace' => 'julio101290\boilerplateinventory\Controllers']
     );
+
+    $routes->get('saldos/barcodeV2/(:any)'
+            , 'SaldosController::getQRPDFV2/$1/$2/$3/$4'
+            , ['namespace' => 'julio101290\boilerplateinventory\Controllers']
+    );
+
+    $routes->get('saldos/barcodeV3/(:any)'
+            , 'SaldosController::getQR96PDF/$1/$2/$3/$4'
+            , ['namespace' => 'julio101290\boilerplateinventory\Controllers']
+    );
     
+    // Vista pública - recibe el código de artículo por GET
+$routes->get('inventario/producto/(:segment)'
+        , 'SaldosController::verProductoPublico/$1'
+        , ['namespace' => 'julio101290\boilerplateinventory\Controllers']
+);
+
+// Opcional: vista pública sin código (para mostrar un buscador simple)
+$routes->get('inventario/producto'
+        , 'SaldosController::verProductoPublico'
+        , ['namespace' => 'julio101290\boilerplateinventory\Controllers']
+);
 });
