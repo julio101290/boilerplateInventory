@@ -624,8 +624,8 @@ class SaldosController extends BaseController {
         $drawLabel = function ($pdf, $offsetX, $lote, $descripcion) use ($styleQR, $labelWidth, $labelHeight) {
             // QR a la izquierda del ticket, centrado verticalmente
             $qrSize = 18;
-            $qrX = $offsetX + 1.5;
-            $qrY = ($labelHeight - $qrSize) / 2;
+            $qrX = $offsetX + 3;
+            $qrY = (($labelHeight - $qrSize) / 2)+1.5;
             
             $loteQR = base_url("admin/inventario/producto/".$lote);
 
@@ -641,17 +641,17 @@ class SaldosController extends BaseController {
             );
 
             // Área de texto a la derecha del QR
-            $textX = $qrX + $qrSize + 1.5;
+            $textX = $qrX + $qrSize + 1.5+1;
             $textWidth = $labelWidth - ($textX - $offsetX) - 1;
 
             // Código (lote) arriba
             $pdf->SetFont('helvetica', '', 7);
-            $pdf->SetXY($textX, 2);
+            $pdf->SetXY($textX, 3);
             $pdf->MultiCell($textWidth, 3, $lote, 0, 'C');
 
             // Descripción debajo
             $pdf->SetFont('helvetica', 'B', 7.5);
-            $pdf->SetXY($textX, 9);
+            $pdf->SetXY($textX, 9+1.5);
             $pdf->MultiCell($textWidth, 3, $descripcion, 0, 'C');
         };
 
