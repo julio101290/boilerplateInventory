@@ -72,7 +72,7 @@ class SaldosModel extends Model {
                         ->orderBy('a.id', 'DESC');
     }
 
-    public function mdlGetSaldosFilters($idEmpresas, $idAlmacen = null, $idProducto = null) {
+    public function mdlGetSaldosFilters($idEmpresas, $idAlmacen = null, $idProducto = null,$storagesUser =null) {
         if (is_string($idEmpresas)) {
             $idEmpresas = array_filter(explode(',', $idEmpresas));
         }
@@ -107,6 +107,11 @@ class SaldosModel extends Model {
         if (count($idEmpresas) > 0) {
             // 👇 OJO: whereIn
             $builder->whereIn('a.idEmpresa', $idEmpresas);
+        }
+        
+        if (count($storagesUser) > 0) {
+            // 👇 OJO: whereIn
+            $builder->whereIn('a.idAlmacen', $storagesUser);
         }
 
         if (!empty($idAlmacen) && (int) $idAlmacen !== 0) {
