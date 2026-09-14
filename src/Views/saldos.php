@@ -91,6 +91,12 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('js') ?>
+<!-- Carga opcional de scripts para exportación si tu layout no los incluye globalmente -->
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
+
 <script>
     $(".btnAceptar").on("click", function () {
         collapsedGroups = {};
@@ -116,6 +122,33 @@
         pageLength: 50,
         lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
         searching: true,
+        dom: '<"row mb-3"<"col-md-6"B><"col-md-6"f>>rt<"row mt-3"<"col-md-5"i><"col-md-7"p>>',
+        buttons: [
+            {
+                extend: 'copy',
+                text: '<i class="fas fa-copy mr-1"></i> Copiar',
+                className: 'btn btn-secondary btn-sm shadow-sm',
+                exportOptions: { columns: ':not(:last-child)' }
+            },
+            {
+                extend: 'excel',
+                text: '<i class="fas fa-file-excel mr-1"></i> Excel',
+                className: 'btn btn-success btn-sm shadow-sm',
+                exportOptions: { columns: ':not(:last-child)' }
+            },
+            {
+                extend: 'csv',
+                text: '<i class="fas fa-file-csv mr-1"></i> CSV',
+                className: 'btn btn-info btn-sm shadow-sm',
+                exportOptions: { columns: ':not(:last-child)' }
+            },
+            {
+                extend: 'print',
+                text: '<i class="fas fa-print mr-1"></i> Imprimir',
+                className: 'btn btn-dark btn-sm shadow-sm',
+                exportOptions: { columns: ':not(:last-child)' }
+            }
+        ],
         language: {
             url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json"
         },
