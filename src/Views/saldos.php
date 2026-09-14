@@ -84,7 +84,6 @@
                                 <th><?= lang('saldos.fields.created_at') ?></th>
                                 <th><?= lang('saldos.fields.updated_at') ?></th>
                                 <th><?= lang('saldos.fields.deleted_at') ?></th>
-
                                 <th><?= lang('saldos.fields.actions') ?></th>
                             </tr>
                         </thead>
@@ -129,12 +128,39 @@
             method: 'GET',
             dataType: "json"
         },
+        initComplete: function () {
+            // Recorre cada columna para agregar un input debajo del título sin borrarlo
+            this.api().columns().every(function () {
+                var column = this;
+                var header = $(column.header());
+                
+                // Omitir columna de acciones (índice 12)
+                if (column.index() === 12) {
+                    return;
+                }
+
+                var title = header.text();
+                // Mantiene el texto del encabezado original y añade el campo de filtro debajo
+                header.html(`<div>${title}</div><div class="form-group mt-1 mb-0"><input type="text" class="form-control form-control-sm" placeholder="Filtrar..." /></div>`);
+
+                // Evento para capturar el valor escrito y filtrar la columna
+                $('input', column.header()).on('keyup change clear', function () {
+                    if (column.search() !== this.value) {
+                        column.search(this.value).draw();
+                    }
+                });
+
+                // Evita conflictos de propagación al hacer clic en el input
+                $('input', column.header()).on('click', function (e) {
+                    e.stopPropagation();
+                });
+            });
+        },
         columnDefs: [{
-                orderable: false,
-                targets: [12],
-                searchable: false,
-                targets: [12]
-            }],
+            orderable: false,
+            searchable: false,
+            targets: [12]
+        }],
         columns: [{'data': 'id'},
             {'data': 'nombreEmpresa'},
             {'data': 'nombreAlmacen'},
@@ -157,8 +183,8 @@
                              <button class="btn btn-success btn-barcodeV3" data-id="${data.id}"><i class="fas fa-barcode"></i></button>
                              <button class="btn btn-primary btnEditExtra" data-toggle="modal" idSaldos="${data.id}" data-target="#modalAddExtraFields">  <i class=" fa fa-plus"></i></button>
                              <button class="btn btn-info btnAddEmploye" data-toggle="modal" idProducts="${data.id}" data-target="#modalProductoEmploye">  <i class=" fa fa-user"></i></button>
-                            </div>
-                         </td>`
+                         </div>
+                        </td>`
                 }
             }
         ]
@@ -253,22 +279,18 @@
             dataType: 'json',
             delay: 250,
             data: function (params) {
-                // CSRF Hash
-                var csrfName = $('.txt_csrfname').attr('name'); // CSRF Token name
-                var csrfHash = $('.txt_csrfname').val(); // CSRF hash
-                var idEmpresa = $('.idEmpresaList').val(); // CSRF hash
+                var csrfName = $('.txt_csrfname').attr('name'); 
+                var csrfHash = $('.txt_csrfname').val(); 
+                var idEmpresa = $('.idEmpresaList').val(); 
 
                 return {
-                    searchTerm: params.term, // search term
-                    [csrfName]: csrfHash, // CSRF Token
-                    idEmpresa: idEmpresa // search term
+                    searchTerm: params.term, 
+                    [csrfName]: csrfHash, 
+                    idEmpresa: idEmpresa 
                 };
             },
             processResults: function (response) {
-
-                // Update CSRF Token
                 $('.txt_csrfname').val(response.token);
-
                 return {
                     results: response.data
                 };
@@ -288,20 +310,17 @@
             dataType: 'json',
             delay: 250,
             data: function (params) {
-                // CSRF Hash
-                var csrfName = $('.txt_csrfname').attr('name'); // CSRF Token name
-                var csrfHash = $('.txt_csrfname').val(); // CSRF hash
-                var idEmpresa = $('.idEmpresaList').val(); // CSRF hash
+                var csrfName = $('.txt_csrfname').attr('name'); 
+                var csrfHash = $('.txt_csrfname').val(); 
+                var idEmpresa = $('.idEmpresaList').val(); 
 
                 return {
-                    searchTerm: params.term, // search term
-                    [csrfName]: csrfHash, // CSRF Token
-                    idEmpresa: idEmpresa // search term
+                    searchTerm: params.term, 
+                    [csrfName]: csrfHash, 
+                    idEmpresa: idEmpresa 
                 };
             },
             processResults: function (response) {
-
-                // Update CSRF Token
                 $('.txt_csrfname').val(response.token);
                 return {
                     results: response.data
@@ -311,25 +330,19 @@
         }
     });
     $(".tableSaldos").on("click", ".btn-barcode", function () {
-
         var idProduct = $(this).attr("data-id");
         window.open("<?= base_url('admin/saldos/barcode/') ?>" + "/" + idProduct, "_blank");
     });
 
-
-
     $(".tableSaldos").on("click", ".btn-barcodeV2", function () {
-
         var idProduct = $(this).attr("data-id");
         window.open("<?= base_url('admin/saldos/barcodeV2/') ?>" + "/" + idProduct, "_blank");
     });
 
     $(".tableSaldos").on("click", ".btn-barcodeV3", function () {
-
         var idProduct = $(this).attr("data-id");
         window.open("<?= base_url('admin/saldos/barcodeV3/') ?>" + "/" + idProduct, "_blank");
     });
-
 
     $(".btnPrintCodes").on("click", function () {
         var idEmpresa = $('#idEmpresaList').val();
@@ -337,14 +350,12 @@
         var idProducto2 = $('.idProducto').val();
         window.open("<?= base_url('admin/saldos/barcode/') ?>" + "/0" + "/" + idEmpresa + "/" + idAlmacen + "/" + idProducto2, "_blank");
     });
+    
     $(".tableSaldos").on("click", ".btnEditExtra", function () {
-
         var idBalance = $(this).attr("idsaldos");
-        console.log("idBalance:", idBalance);
         var datos = new FormData();
         datos.append("idBalance", idBalance);
         $.ajax({
-
             url: "<?= base_url('admin/saldos/getProductsFieldsExtra') ?>",
             method: "POST",
             data: datos,
@@ -352,13 +363,11 @@
             contentType: false,
             processData: false,
             success: function (respuesta) {
-
                 $(".extraFields").html(respuesta);
             }
-
         })
-
     });
+    
     $(".tableSaldos").on("click", ".btn-delete", function () {
         var idSaldos = $(this).attr("data-id");
         Swal.fire({
@@ -389,6 +398,7 @@
             }
         });
     });
+    
     $(function () {
         $("#modalAddSaldos").draggable();
     });

@@ -125,7 +125,7 @@ class SaldosModel extends Model {
         return $builder; // 👈 CLAVE
     }
 
-    public function mdlGetProductoEmpresa($empresas, $idProducto, $search) {
+    public function mdlGetProductoEmpresa($empresas, $idProducto, $search,$storagesUser) {
 
         $builder = $this->db->table('products a')
                 ->select(

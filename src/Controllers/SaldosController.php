@@ -43,7 +43,7 @@ class SaldosController extends BaseController {
      * Index
      * @return type
      */
-    public function index() {
+   public function index($idEmpresaList = null, $idAlmacen = null, $idProducto = null) {
         helper('auth');
 
         $idUser = user()->id;
@@ -51,8 +51,8 @@ class SaldosController extends BaseController {
         $empresasID = count($titulos["empresas"]) === 0 ? [0] : array_column($titulos["empresas"], "id");
 
         $storagesUser = $this->storagesPerUser
-                        ->where("idUsuario", $idUser)
-                        ->where("status", "on")->asArray()->findAll();
+                    ->where("idUsuario", $idUser)
+                    ->where("status", "on")->asArray()->findAll();
 
         $storagesUser = count($storagesUser) === 0 ? [0] : array_column($storagesUser, "idStorage");
 
@@ -66,22 +66,34 @@ class SaldosController extends BaseController {
             $orderColumnIndex = (int) $request->getGet('order')[0]['column'] ?? 0;
             $orderDir = $request->getGet('order')[0]['dir'] ?? 'asc';
 
-            //$fields = $this->saldos->allowedFields;
+            // Mapeo exacto de los índices de las columnas con sus campos en la BD
             $fields = [
-                'id' => 'a.id',
-                'nombreAlmacen' => 'c.name',
-                'lote' => 'a.lote',
-                'codigoProducto' => 'a.codigoProducto',
-                'descripcion' => 'a.descripcion',
-                'fullname' => 'e.fullname'
+                0 => 'a.id',
+                1 => 'b.nombre',       // nombreEmpresa
+                2 => 'c.name',         // nombreAlmacen
+                3 => 'a.lote',
+                4 => 'e.fullname',     // fullname
+                5 => 'a.idProducto',
+                6 => 'a.codigoProducto',
+                7 => 'a.descripcion',
+                8 => 'a.cantidad',
+                9 => 'a.created_at',
+                10 => 'a.updated_at',
+                11 => 'a.deleted_at'
             ];
-            $orderField = $fields[$orderColumnIndex] ?? 'id';
+            
+            $orderField = $fields[$orderColumnIndex] ?? 'a.id';
 
-            $builder = $this->saldos->mdlGetSaldos($empresasID, $storagesUser);
+            // Usamos el método de filtros que ya tienes estructurado en el modelo
+            // Si la URL trae parámetros específicos (como cuando se usa el botón Aceptar), los pasa aquí
+            $empresaFiltro = (!empty($idEmpresaList) && $idEmpresaList != 0) ? [$idEmpresaList] : $empresasID;
+            
+            $builder = $this->saldos->mdlGetSaldosFilters($empresaFiltro, $idAlmacen, $idProducto, $storagesUser);
 
             $total = clone $builder;
             $recordsTotal = $total->countAllResults(false);
 
+            // 1. Búsqueda Global (buscador general de DataTables)
             if (!empty($searchValue)) {
                 $builder->groupStart();
                 foreach ($fields as $field) {
@@ -90,11 +102,22 @@ class SaldosController extends BaseController {
                 $builder->groupEnd();
             }
 
+            // 2. Búsqueda Individual por Columna (los inputs que pusimos en los headers)
+            $columns = $request->getGet('columns');
+            if (!empty($columns) && is_array($columns)) {
+                foreach ($columns as $index => $column) {
+                    $columnSearch = $column['search']['value'] ?? '';
+                    if (!empty($columnSearch) && isset($fields[$index])) {
+                        $builder->like($fields[$index], $columnSearch);
+                    }
+                }
+            }
 
             $filteredBuilder = clone $builder;
             $recordsFiltered = $filteredBuilder->countAllResults(false);
 
-            $data = $builder->orderBy("a." . $orderField, $orderDir)
+            // Si el ordenamiento no contiene el prefijo de la tabla, lo aplicamos correctamente
+            $data = $builder->orderBy($orderField, $orderDir)
                     ->get($length, $start)
                     ->getResultArray();
 
@@ -110,21 +133,20 @@ class SaldosController extends BaseController {
         $titulos["subtitle"] = "Extrae la información de los productos por el codigo de barras";
         return view('julio101290\boilerplateinventory\Views\saldos', $titulos);
     }
-
-    public function getSaldosFilters($idEmpresa, $idAlmacen, $idProducto) {
+public function getSaldosFilters($idEmpresa, $idAlmacen, $idProducto) {
         helper('auth');
 
         $idUser = user()->id;
-        if ($idEmpresa == "") {
+        if ($idEmpresa == "" || $idEmpresa == "0") {
             $titulos["empresas"] = $this->empresa->mdlEmpresasPorUsuario($idUser);
             $empresasID = count($titulos["empresas"]) === 0 ? [0] : array_column($titulos["empresas"], "id");
         } else {
-            $empresasID = $idEmpresa;
+            $empresasID = [$idEmpresa];
         }
 
         $storagesUser = $this->storagesPerUser
-                        ->where("idUsuario", $idUser)
-                        ->where("status", "on")->asArray()->findAll();
+                    ->where("idUsuario", $idUser)
+                    ->where("status", "on")->asArray()->findAll();
 
         $storagesUser = count($storagesUser) === 0 ? [0] : array_column($storagesUser, "idStorage");
 
@@ -138,22 +160,30 @@ class SaldosController extends BaseController {
             $orderColumnIndex = (int) $request->getGet('order')[0]['column'] ?? 0;
             $orderDir = $request->getGet('order')[0]['dir'] ?? 'asc';
 
-            //$fields = $this->saldos->allowedFields;
+            // Mapeo exacto por índice de columna para coincidir con el JS
             $fields = [
-                'id' => 'a.id',
-                'nombreAlmacen' => 'c.name',
-                'lote' => 'a.lote',
-                'codigoProducto' => 'a.codigoProducto',
-                'descripcion' => 'a.descripcion',
-                'fullname' => 'e.fullname'
+                0 => 'a.id',
+                1 => 'b.nombre',       // nombreEmpresa
+                2 => 'c.name',         // nombreAlmacen
+                3 => 'a.lote',
+                4 => 'e.fullname',     // fullname
+                5 => 'a.idProducto',
+                6 => 'a.codigoProducto',
+                7 => 'a.descripcion',
+                8 => 'a.cantidad',
+                9 => 'a.created_at',
+                10 => 'a.updated_at',
+                11 => 'a.deleted_at'
             ];
-            $orderField = $fields[$orderColumnIndex] ?? 'id';
+            
+            $orderField = $fields[$orderColumnIndex] ?? 'a.id';
 
             $builder = $this->saldos->mdlGetSaldosFilters($empresasID, $idAlmacen, $idProducto, $storagesUser);
 
             $total = clone $builder;
             $recordsTotal = $total->countAllResults(false);
 
+            // 1. Búsqueda Global
             if (!empty($searchValue)) {
                 $builder->groupStart();
                 foreach ($fields as $field) {
@@ -162,11 +192,22 @@ class SaldosController extends BaseController {
                 $builder->groupEnd();
             }
 
+            // 2. Búsqueda Individual por Columna (Encabezados)
+            $columns = $request->getGet('columns');
+            if (!empty($columns) && is_array($columns)) {
+                foreach ($columns as $index => $column) {
+                    $columnSearch = $column['search']['value'] ?? '';
+                    if (!empty($columnSearch) && isset($fields[$index])) {
+                        $builder->like($fields[$index], $columnSearch);
+                    }
+                }
+            }
 
             $filteredBuilder = clone $builder;
             $recordsFiltered = $filteredBuilder->countAllResults(false);
 
-            $data = $builder->orderBy("a." . $orderField, $orderDir)
+            // Se usa $orderField directo ya que incluye su prefijo de tabla correspondiente
+            $data = $builder->orderBy($orderField, $orderDir)
                     ->get($length, $start)
                     ->getResultArray();
 
@@ -512,8 +553,8 @@ class SaldosController extends BaseController {
             $qrSize = 60;
             $qrX = ($labelSize - $qrSize) / 2;
             $qrY = 6;
-            
-            $loteQR = base_url("admin/inventario/producto/".$lote);
+
+            $loteQR = base_url("admin/inventario/producto/" . $lote);
 
             $pdf->write2DBarcode(
                     $loteQR,
@@ -625,9 +666,9 @@ class SaldosController extends BaseController {
             // QR a la izquierda del ticket, centrado verticalmente
             $qrSize = 18;
             $qrX = $offsetX + 3;
-            $qrY = (($labelHeight - $qrSize) / 2)+1.5;
-            
-            $loteQR = base_url("admin/inventario/producto/".$lote);
+            $qrY = (($labelHeight - $qrSize) / 2) + 1.5;
+
+            $loteQR = base_url("admin/inventario/producto/" . $lote);
 
             $pdf->write2DBarcode(
                     $loteQR,
@@ -641,7 +682,7 @@ class SaldosController extends BaseController {
             );
 
             // Área de texto a la derecha del QR
-            $textX = $qrX + $qrSize + 1.5+1;
+            $textX = $qrX + $qrSize + 1.5 + 1;
             $textWidth = $labelWidth - ($textX - $offsetX) - 1;
 
             // Código (lote) arriba
@@ -651,7 +692,7 @@ class SaldosController extends BaseController {
 
             // Descripción debajo
             $pdf->SetFont('helvetica', 'B', 7.5);
-            $pdf->SetXY($textX, 9+1.5);
+            $pdf->SetXY($textX, 9 + 1.5);
             $pdf->MultiCell($textWidth, 3, $descripcion, 0, 'C');
         };
 
@@ -908,6 +949,7 @@ class SaldosController extends BaseController {
                 $postData['searchTerm'] = "";
             }
             $empresa = (int) $empresa;
+
 
             // Obtiene paginación manual desde el modelo
             $resultados = $this->saldos
