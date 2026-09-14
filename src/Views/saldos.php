@@ -7,15 +7,16 @@
 <?= $this->include('julio101290\boilerplateinventory\Views\modulesSaldos/extraFields') ?>
 <?= $this->include('julio101290\boilerplatemaintenance\Views/modulesProductsEmployes/modalEmployesProducts') ?>
 
-<div class="card card-default">
-    <div class="card-header">
-        <div class="float-left">
-
-            <div class="btn-group">
-
-                <div class="form-group">
-                    <label for="idEmpresaList">Empresa </label>
-                    <select class="form-control idEmpresaList" name="idEmpresaList" id="idEmpresaList" style="width:100%;">
+<div class="card card-outline card-primary shadow-sm">
+    <div class="card-header bg-white py-3">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+            <!-- Filtros principales -->
+            <div class="form-row align-items-end flex-grow-1 mr-md-3">
+                <div class="col-xl-3 col-lg-3 col-md-4 col-sm-6 mb-3 mb-xl-0">
+                    <label for="idEmpresaList" class="font-weight-bold text-secondary small mb-1">
+                        <i class="fas fa-building mr-1 text-primary"></i> Empresa
+                    </label>
+                    <select class="form-control form-control-sm idEmpresaList" name="idEmpresaList" id="idEmpresaList" style="width:100%;">
                         <option value="0">Seleccione empresa</option>
                         <?php foreach ($empresas as $value): ?>
                             <option value="<?= $value['id'] ?>">
@@ -25,43 +26,36 @@
                     </select>
                 </div>
 
-            </div>
-            <div class="btn-group">
-                <div class="form-group">
-                    <label for="idAlmacen">Almacen</label>
-                    <select name="idAlmacen" id="idAlmacen" style="width: 100%;" class="form-control idAlmacen form-controlProducts">
-                        <option value="0">Seleccione Almacen</option>
-
+                <div class="col-xl-3 col-lg-3 col-md-4 col-sm-6 mb-3 mb-xl-0">
+                    <label for="idAlmacen" class="font-weight-bold text-secondary small mb-1">
+                        <i class="fas fa-warehouse mr-1 text-primary"></i> Almacén
+                    </label>
+                    <select name="idAlmacen" id="idAlmacen" style="width: 100%;" class="form-control form-control-sm idAlmacen form-controlProducts">
+                        <option value="0">Seleccione Almacén</option>
                     </select>
-                </div> 
-            </div>
-            <div class="btn-group">
-                <div class="form-group">
-                    <label for="idProducto">Productos</label>
-                    <select name="idProducto" id="idProducto" style="width: 100%;" class="form-control idProducto form-controlProducts">
-                        <option value="0" selected>
-                            Seleccione el producto
-                        </option>
+                </div>
 
+                <div class="col-xl-4 col-lg-4 col-md-4 col-sm-8 mb-3 mb-xl-0" hidden>
+                    <label for="idProducto" class="font-weight-bold text-secondary small mb-1">
+                        <i class="fas fa-box-open mr-1 text-primary"></i> Productos
+                    </label>
+                    <select name="idProducto" id="idProducto" style="width: 100%;" class="form-control form-control-sm idProducto form-controlProducts">
+                        <option value="0" selected>Seleccione el producto</option>
                     </select>
-                </div> 
+                </div>
+
+                <div class="col-xl-2 col-lg-2 col-md-12 col-sm-4 mb-3 mb-xl-0">
+                    <button type="button" class="btn btn-primary btn-sm btn-block shadow-sm btnAceptar" id="btnAceptar" name="btnAceptar">
+                        <i class="fa fa-filter mr-1"></i> Filtrar
+                    </button>
+                </div>
             </div>
-            <div class="btn-group">
-                <button type="button" class="btn btn-primary btnAceptar" id="btnAceptar" name="btnAceptar"><i class="fa fa-check"></i></button>
-            </div>
 
-
-        </div>
-
-        <div class="float-right">
-
-
-            <div class="btn-group">
-
-                <button class="btn btn-primary btnPrintCodes" data-toggle="modal">
-                    <i class="fa fa-barcode"></i> Imprimir todos los códigos de barras
+            <!-- Botones de acciones globales -->
+            <div class="mt-2 mt-md-0">
+                <button class="btn btn-success btn-sm shadow-sm btnPrintCodes">
+                    <i class="fa fa-barcode mr-1"></i> Imprimir Códigos
                 </button>
-
             </div>
         </div>
     </div>
@@ -69,8 +63,8 @@
         <div class="row">
             <div class="col-md-12">
                 <div class="table-responsive">
-                    <table id="tableSaldos" class="table table-striped table-hover va-middle tableSaldos">
-                        <thead>
+                    <table id="tableSaldos" class="table table-striped table-hover table-bordered va-middle tableSaldos text-nowrap w-100">
+                        <thead class="thead-light">
                             <tr>
                                 <th>#</th>
                                 <th><?= lang('saldos.fields.idEmpresa') ?></th>
@@ -84,7 +78,7 @@
                                 <th><?= lang('saldos.fields.created_at') ?></th>
                                 <th><?= lang('saldos.fields.updated_at') ?></th>
                                 <th><?= lang('saldos.fields.deleted_at') ?></th>
-                                <th><?= lang('saldos.fields.actions') ?></th>
+                                <th class="text-center"><?= lang('saldos.fields.actions') ?></th>
                             </tr>
                         </thead>
                         <tbody></tbody>
@@ -95,62 +89,67 @@
     </div>
 </div>
 <?= $this->endSection() ?>
+
 <?= $this->section('js') ?>
 <script>
     $(".btnAceptar").on("click", function () {
-        //RESETEAR EL COLAPSO DE LA TABLA
         collapsedGroups = {};
         ttop = '';
         fncAceptar();
+    });
 
-    })
     function fncAceptar() {
         var idEmpresa = $('#idEmpresaList').val();
         var idAlmacen = $('.idAlmacen').val();
         var idProducto = $('.idProducto').val();
         console.log("idProducto", idProducto);
 
-
         tableSaldos.ajax.url(`<?= base_url('admin/saldos') ?>/` + idEmpresa + '/' + idAlmacen + '/' + idProducto).load();
     }
+
     var tableSaldos = $('#tableSaldos').DataTable({
         processing: true,
         serverSide: true,
         responsive: true,
         autoWidth: false,
         order: [[1, 'asc']],
-        pageLength: 50, // 👈 registros por defecto
-        lengthMenu: [10, 25, 50, 100], // 👈 opciones del selector
-        searching: true, // 👈 AQUÍ se activa el buscador
-
+        pageLength: 50,
+        lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
+        searching: true,
+        language: {
+            url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json"
+        },
         ajax: {
             url: '<?= base_url('admin/saldos') ?>',
             method: 'GET',
             dataType: "json"
         },
         initComplete: function () {
-            // Recorre cada columna para agregar un input debajo del título sin borrarlo
             this.api().columns().every(function () {
                 var column = this;
                 var header = $(column.header());
                 
-                // Omitir columna de acciones (índice 12)
                 if (column.index() === 12) {
                     return;
                 }
 
                 var title = header.text();
-                // Mantiene el texto del encabezado original y añade el campo de filtro debajo
-                header.html(`<div>${title}</div><div class="form-group mt-1 mb-0"><input type="text" class="form-control form-control-sm" placeholder="Filtrar..." /></div>`);
+                header.html(`
+                    <div class="font-weight-bold mb-1">${title}</div>
+                    <div class="input-group input-group-sm">
+                        <input type="text" class="form-control" placeholder="Buscar..." />
+                        <div class="input-group-append">
+                            <span class="input-group-text bg-white text-muted px-1"><i class="fas fa-search fa-xs"></i></span>
+                        </div>
+                    </div>
+                `);
 
-                // Evento para capturar el valor escrito y filtrar la columna
                 $('input', column.header()).on('keyup change clear', function () {
                     if (column.search() !== this.value) {
                         column.search(this.value).draw();
                     }
                 });
 
-                // Evita conflictos de propagación al hacer clic en el input
                 $('input', column.header()).on('click', function (e) {
                     e.stopPropagation();
                 });
@@ -161,7 +160,8 @@
             searchable: false,
             targets: [12]
         }],
-        columns: [{'data': 'id'},
+        columns: [
+            {'data': 'id'},
             {'data': 'nombreEmpresa'},
             {'data': 'nombreAlmacen'},
             {'data': 'lote'},
@@ -169,22 +169,26 @@
             {'data': 'idProducto'},
             {'data': 'codigoProducto'},
             {'data': 'descripcion'},
-            {'data': 'cantidad'},
+            {
+                'data': 'cantidad',
+                'render': function (data) {
+                    return `<span class="badge badge-info px-2 py-1">${data}</span>`;
+                }
+            },
             {'data': 'created_at'},
             {'data': 'updated_at'},
             {'data': 'deleted_at'},
-
             {
                 "data": function (data) {
                     return `<td class="text-right py-0 align-middle">
                          <div class="btn-group btn-group-sm">
-                             <button class="btn btn-success btn-barcode" data-id="${data.id}"><i class="fas fa-barcode"></i></button>
-                             <button class="btn btn-success btn-barcodeV2" data-id="${data.id}"><i class="fas fa-barcode"></i></button>
-                             <button class="btn btn-success btn-barcodeV3" data-id="${data.id}"><i class="fas fa-barcode"></i></button>
-                             <button class="btn btn-primary btnEditExtra" data-toggle="modal" idSaldos="${data.id}" data-target="#modalAddExtraFields">  <i class=" fa fa-plus"></i></button>
-                             <button class="btn btn-info btnAddEmploye" data-toggle="modal" idProducts="${data.id}" data-target="#modalProductoEmploye">  <i class=" fa fa-user"></i></button>
+                             <button class="btn btn-success btn-barcode shadow-sm mr-1" data-id="${data.id}" title="Código de barras 1"><i class="fas fa-barcode"></i></button>
+                             <button class="btn btn-success btn-barcodeV2 shadow-sm mr-1" data-id="${data.id}" title="Código de barras 2"><i class="fas fa-barcode"></i></button>
+                             <button class="btn btn-success btn-barcodeV3 shadow-sm mr-1" data-id="${data.id}" title="Código de barras 3"><i class="fas fa-barcode"></i></button>
+                             <button class="btn btn-primary btnEditExtra shadow-sm mr-1" data-toggle="modal" idSaldos="${data.id}" data-target="#modalAddExtraFields" title="Campos Extra"><i class="fa fa-plus"></i></button>
+                             <button class="btn btn-info btnAddEmploye shadow-sm" data-toggle="modal" idProducts="${data.id}" data-target="#modalProductoEmploye" title="Asignar Empleado"><i class="fa fa-user"></i></button>
                          </div>
-                        </td>`
+                        </td>`;
                 }
             }
         ]
@@ -267,12 +271,12 @@
                 $("#codigoProducto").val(respuesta["codigoProducto"]);
                 $("#descripcion").val(respuesta["descripcion"]);
                 $("#cantidad").val(respuesta["cantidad"]);
-
             }
         });
     });
 
     $(".idAlmacen").select2({
+        theme: 'bootstrap4',
         ajax: {
             url: "<?= base_url('admin/saldos/getStoragesAjax') ?>",
             type: "post",
@@ -299,11 +303,16 @@
         }
     });
 
+    $("#idEmpresaList").select2({
+        theme: 'bootstrap4'
+    });
+
     $("#idEmpresaList").change(function () {
         $('.idAlmacen').val("0").trigger('change');
     })
 
     $(".idProducto").select2({
+        theme: 'bootstrap4',
         ajax: {
             url: "<?= base_url('admin/saldos/getProductsAjax') ?>",
             type: "post",
@@ -329,6 +338,7 @@
             cache: true
         }
     });
+
     $(".tableSaldos").on("click", ".btn-barcode", function () {
         var idProduct = $(this).attr("data-id");
         window.open("<?= base_url('admin/saldos/barcode/') ?>" + "/" + idProduct, "_blank");
